@@ -1,0 +1,13 @@
+List of Commands:
+north - move north
+south- move south
+east- move east
+west- move west
+up- move up
+down- move down
+inventory- shows you your inventory
+inspect "item"- learn a little more about an item in your inventory!
+get "item" - add item to your inventory
+drop "item"- remove item from your inventory
+exit- leaves the game
+help- lists available commands
