@@ -9,5 +9,8 @@ inventory- shows you your inventory
 inspect "item"- learn a little more about an item in your inventory!
 get "item" - add item to your inventory
 drop "item"- remove item from your inventory
-exit- leaves the game
+shout "msg" - says a message to everyone in the game
+say "msg" - says your message to players in the same room as you
+tell "player" "msg" - tell a specific player a message
+quit- leaves the game
 help- lists available commands

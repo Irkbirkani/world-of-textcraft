@@ -1,0 +1,63 @@
+<rooms>
+	<room name="First Room" keyword="FirstRoom">
+		<description>You are in the first Room. 
+Exit to the east.</description>
+		<exits>,,SecondRoom,,,</exits>
+	</room>
+	<room name="Second Room" keyword="SecondRoom">
+		<description>You are in the second Room. 
+Exits to the south, east, or west.</description>
+		<item name="sword">It Looks Sharp</item>
+		<item name="torch">It's not that bright</item>
+		<exits>,FourthRoom,ThirdRoom,FirstRoom,,</exits>
+	</room>
+	<room name="Third Room" keyword="ThirdRoom">
+		<description>You are in the Third Room. 
+Exits to the south or east.
+		</description>
+		<item name="dog">A cute little Welsh Corgi</item>
+		<exits>,FifthRoom,SecondRoom,,,</exits>
+	</room>
+	<room name="Fourth Room" keyword="FourthRoom">
+		<description>You enter room number Four.
+Exits to the north, south, or west.</description>
+		<item name="your bank balance">you wish it were as high as your GPA.</item>
+		<exits>SecondRoom,SeventhRoom,,SixthRoom,,</exits>
+	</room>
+	<room name="Fifth Room" keyword="FifthRoom">
+		<description>The Fifth Room. 
+Exits to the north, south, or west.
+		</description>
+		<item name="shield">It's broken</item>
+		<exits>ThirdRoom,NinthRoom,,SeventhRoom,,</exits>
+	</room>
+	<room name="Sixth Room" keyword="SixthRoom">
+		<description>The Sixth Room. 
+Exit to the east.</description>
+		<exits>,,FourthRoom,,,</exits>
+	</room>
+	<room name="Seventh Room" keyword="SeventhRoom">
+		<description>The Crossroads of the rooms.
+Exits to the north, south, east, or west.</description>
+		<item name="thing">The most amazing thing you ever did see</item>
+		<exits>FourthRoom,NinthRoom,FifthRoom,EighthRoom,,</exits>
+	</room>
+	<room name="Eighth Room" keyword="EighthRoom">
+		<description>Room Numero Ocho. 
+Salida a east.</description>
+		<exits>,,SeventhRoom,,,</exits>
+	</room>
+	<room name="Ninth Room" keyword="NinthRoom">
+		<description>The Second Highest room number.
+Exit north.</description>
+		<item name="hat">its pretty rad looking.</item>
+		<item name="ball">it might be a soccer ball?</item>
+		<item name="bat">It's the flying kind not the hitting kind</item>
+		<exits>SeventhRoom,,,,,,</exits>
+	</room>
+	<room name="Tenth Room" keyword="TenthRoom">
+		<description>The last Room. 
+Exit north.</description>
+		<exits>FifthRoom,,,,,</exits>
+	</room>
+</rooms>
