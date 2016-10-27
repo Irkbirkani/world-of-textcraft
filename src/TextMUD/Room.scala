@@ -4,12 +4,13 @@ import scala.io.Source
 import akka.actor.Actor
 import akka.actor.actorRef2Scala
 import akka.actor.ActorRef
+import TextMUD.MutableDLList
 
 class Room(
     keyword: String,
     val name: String,
     val description: String,
-    private var _items: List[Item],
+    private var _items: MutableDLList[Item],
     private val exits: Array[String]) extends Actor {
 
   import Room._
