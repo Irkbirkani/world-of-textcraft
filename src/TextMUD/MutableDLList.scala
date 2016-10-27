@@ -1,4 +1,4 @@
-package src.TextMUD
+package TextMUD
 
 import collection.mutable
 
@@ -110,3 +110,6 @@ class MutableDLList[A] extends mutable.Buffer[A] {
   
   override def toString = mkString("MutableDLList(", ", ", ")")
 }
+
+
+

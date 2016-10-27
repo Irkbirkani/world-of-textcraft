@@ -1,10 +1,8 @@
 package TextMUD
 
-import scala.io.Source
 import akka.actor.Actor
 import akka.actor.actorRef2Scala
 import akka.actor.ActorRef
-import TextMUD.MutableDLList
 
 class Room(
     keyword: String,
@@ -43,9 +41,9 @@ class Room(
 
   //Print Description
   def printDescription(): String = {
-   name+"\n"+ description + "\n" +
-   "You see: \n" + (if (items.length == 0) "nothing" else (for (i <- 0 until items.length) yield (items(i).name)).mkString("\n")) +
-   "\nPlayers in room: \n" + players.map(_.path.name).mkString("\n")
+    name + "\n" + description + "\n" +
+      "You see: \n" + (if (items.length == 0) "nothing" else (for (i <- 0 until items.length) yield (items(i).name)).mkString("\n")) +
+      "\nPlayers in room: \n" + players.map(_.path.name).mkString("\n")
   }
 
   //Room Exit Management
@@ -79,7 +77,7 @@ class Room(
   }
 
   def dropItem(item: Item): Unit = {
-    _items = item :: items
+    _items += item
   }
 }
 
@@ -102,7 +100,8 @@ object Room {
     val keyword = (n \ "@keyword").text
     val name = (n \ "@name").text
     val description = (n \ "description").text
-    val item = (n \ "item").map { inode => Item(inode) }.toList
+    val item = new MutableDLList[Item]()
+    val itm = (n \ "item").map { inode => Item(inode) }.toList.foreach(i=> item += i)
     val exits = (n \ "exits").text.split(",").padTo(6, "")
     new Room(keyword, name, description, item, exits)
   }

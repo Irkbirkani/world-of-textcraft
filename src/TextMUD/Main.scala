@@ -26,7 +26,7 @@ object Main extends App {
       Future {
         out.println("What is your name? \nNo spaces. Letters only.")
         val name = in.readLine()
-        playerManager ! PlayerManager.NewPlayer(name, "FirstRoom", List(), in, out, sock)
+        playerManager ! PlayerManager.NewPlayer(name, "FirstRoom", new MutableDLList[Item](), in, out, sock)
       }
     }
   }

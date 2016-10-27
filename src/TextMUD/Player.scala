@@ -8,9 +8,10 @@ import akka.actor.ActorRef
 import java.io.BufferedReader
 import java.net.Socket
 
+
 class Player(
     val name: String,
-    private var _inventory: List[Item],
+    private var _inventory: MutableDLList[Item],
     val input: BufferedReader,
     val output: PrintStream,
     val sock: Socket) extends Actor {
@@ -69,7 +70,7 @@ class Player(
   }
 
   def addToInventory(item: Item): Unit = {
-    _inventory = item :: inventory
+     _inventory += item
   }
 
   private def emptyInventory: Boolean = {

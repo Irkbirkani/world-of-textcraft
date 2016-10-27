@@ -36,7 +36,7 @@ class PlayerManager extends Actor {
 
 object PlayerManager {
   case object CheckInput
-  case class NewPlayer(name: String, location: String, inventory: List[Item], input: BufferedReader, output: PrintStream, sock: Socket)
+  case class NewPlayer(name: String, location: String, inventory: MutableDLList[Item], input: BufferedReader, output: PrintStream, sock: Socket)
   case class PrintShoutMessage(msg: String, name: String)
   case class PrintTellMessage(to: String, from: String, msg: String)
 }
