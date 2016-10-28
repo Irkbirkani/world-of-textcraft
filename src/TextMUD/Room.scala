@@ -101,7 +101,7 @@ object Room {
     val name = (n \ "@name").text
     val description = (n \ "description").text
     val item = new MutableDLList[Item]()
-    val itm = (n \ "item").map { inode => Item(inode) }.toList.foreach(i=> item += i)
+    (n \ "item").map { inode => Item(inode) }.toList.foreach(i=> item += i)
     val exits = (n \ "exits").text.split(",").padTo(6, "")
     new Room(keyword, name, description, item, exits)
   }
