@@ -12,10 +12,12 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 object Main extends App {
+  //Initializes system, Player Manager, and Room Manager
   val system = ActorSystem("Main")
   val playerManager = system.actorOf(Props[PlayerManager], "PlayerManager")
   val roomManager = system.actorOf(Props[RoomManager], "RoomManager")
-
+  
+  //Checks and schedules checks for connections
   implicit val ec = system.dispatcher
   def checkConnections(): Unit = {
     val ss = new ServerSocket(4445)

@@ -82,18 +82,19 @@ class Room(
 }
 
 object Room {
+  //Description
   case object PrintDescription
-
-  case class GetExit(dir: Int)
-  case class LinkRooms(rooms: Map[String, ActorRef])
-
+  //Inventory Management
   case class GetItem(name: String, itemName: String)
   case class DropItem(name: String, item: Item)
-
+  //Exit Management
+  case class GetExit(dir: Int)
+  case class LinkRooms(rooms: Map[String, ActorRef])
+  //Room Management
   case class LeaveRoom(p: ActorRef, name: String)
   case class EnterRoom(p: ActorRef, name: String)
   case class LeaveGame(p: ActorRef, name: String)
-
+  //Messaging
   case class SayMessage(msg: String, name: String)
 
   def apply(n: xml.Node): Room = {
@@ -101,9 +102,8 @@ object Room {
     val name = (n \ "@name").text
     val description = (n \ "description").text
     val item = new MutableDLList[Item]()
-    (n \ "item").map { inode => Item(inode) }.toList.foreach(i=> item += i)
+    (n \ "item").map { inode => Item(inode) }.toList.foreach(_ +=: item)
     val exits = (n \ "exits").text.split(",").padTo(6, "")
     new Room(keyword, name, description, item, exits)
   }
 }
-

@@ -98,7 +98,7 @@ class MutableDLList[A] extends mutable.Buffer[A] {
     ret
   }
   
-  def myMAp[B](f:A=>B): MutableDLList[B] = {
+  def myMap[B](f:A=>B): MutableDLList[B] = {
     val ret = new MutableDLList[B]()
     var rover = end.next
     while(rover != end) {

@@ -7,6 +7,7 @@ import akka.actor.ActorRef
 
 class RoomManager extends Actor {
   import RoomManager._
+  //Actor Management
   def receive = {
     case EnterRoom(loc, p) =>
       p ! Player.TakeExit(Some(rooms(loc)))
@@ -21,5 +22,6 @@ class RoomManager extends Actor {
 }
 
 object RoomManager {
+  //Puts player in a room
   case class EnterRoom(loc: String, p: ActorRef)
 }
