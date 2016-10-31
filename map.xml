@@ -16,6 +16,7 @@ Exits to the south, east, or west.</description>
 Exits to the south or east.
 		</description>
 		<item name="dog">A cute little Welsh Corgi</item>
+		<npcs name="Muffin"></npcs>
 		<exits>,FifthRoom,SecondRoom,,,</exits>
 	</room>
 	<room name="Fourth Room" keyword="FourthRoom">

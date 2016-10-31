@@ -8,6 +8,7 @@ class Room(
     keyword: String,
     val name: String,
     val description: String,
+    private var npcs: List[ActorRef],
     private var _items: MutableDLList[Item],
     private val exits: Array[String]) extends Actor {
 
@@ -101,9 +102,10 @@ object Room {
     val keyword = (n \ "@keyword").text
     val name = (n \ "@name").text
     val description = (n \ "description").text
+    val npc = (n \ "npcs").map { npcNode => NPC(npcNode) }.toList
     val item = new MutableDLList[Item]()
     (n \ "item").map { inode => Item(inode) }.toList.foreach(_ +=: item)
     val exits = (n \ "exits").text.split(",").padTo(6, "")
-    new Room(keyword, name, description, item, exits)
+    new Room(keyword, name, description, npc, item, exits)
   }
 }
