@@ -8,16 +8,17 @@ import akka.actor.ActorRef
 import java.io.BufferedReader
 import java.net.Socket
 
-
 class Player(
     val name: String,
-    private var health:Double,
+    private var health: Double,
     private var _inventory: MutableDLList[Item],
     val input: BufferedReader,
     val output: PrintStream,
     val sock: Socket) extends Actor {
 
   import Player._
+  import Character._
+
   //location access
   private var _location: ActorRef = null
   def location = _location
@@ -45,10 +46,13 @@ class Player(
           if (_location != null) location ! Room.LeaveRoom(self, name)
           _location = dest
           location ! Room.EnterRoom(self, name)
+
           location ! Room.PrintDescription
         case None =>
           output.println("You can't go that way")
       }
+    case KillCmnd(c) =>
+    //      Main.activityManager ! 
   }
 
   //Inventory Management
@@ -71,7 +75,7 @@ class Player(
   }
 
   def addToInventory(item: Item): Unit = {
-     _inventory += item
+    _inventory += item
   }
 
   private def emptyInventory: Boolean = {
@@ -86,15 +90,34 @@ class Player(
     }
   }
 
+  //Equipment management
+  private var _equipment: List[Option[Item]] = List.fill(5)(None)
+  val equipment = _equipment
+  
+  def equip(item:String):Unit = {
+    val itm = inventory.filter(_.name != item)
+    if (itm.length == 0) PrintMessage("You cannot equip an item you do not have in your inventory.")
+    else if (itm(0).itype == Item.misc) PrintMessage("You cannot equip that.")
+    else if (itm(0).itype == Item.armor) {
+      
+    }
+  }
+  
   //Move Player
   private def move(direction: Int): Unit = {
     location ! Room.GetExit(direction)
   }
 
+  //Combat commands
+  def kill(pl: String): Unit = {
+    location ! Room.CheckInRoom(pl)
+
+  }
+
   //Player Tell Messaging
   def tellMessage(s: String): Unit = {
     val Array(_, to, msg) = s.split(" +", 3)
-    Main.entityManager ! EntityManager.PrintTellMessage(to, name, msg)
+    Main.playerManager ! PlayerManager.PrintTellMessage(to, name, msg)
   }
 
   //Process Player Input
@@ -119,9 +142,12 @@ class Player(
       case Some(item) =>
         location ! Room.DropItem(name, item)
       case None => None
-    } //player messaging
+    }
+    else if (in.startsWith("kill")) kill(in.drop(5))
+
+    //player messaging
     else if (in.startsWith("shout")) {
-      Main.entityManager ! EntityManager.PrintShoutMessage(in.drop(6), name)
+      Main.playerManager ! PlayerManager.PrintShoutMessage(in.drop(6), name)
     } else if (in.startsWith("say")) location ! Room.SayMessage(in.drop(4), name)
     else if (in.startsWith("tell")) tellMessage(in)
     //help command
@@ -136,7 +162,6 @@ object Player {
   case object ProcessInput
   case class PrintMessage(msg: String)
   case class AddToInventory(item: Option[Item])
-  case class TakeExit(dir: Option[ActorRef])
-  
+
   val playerHealth = 100.0
 }

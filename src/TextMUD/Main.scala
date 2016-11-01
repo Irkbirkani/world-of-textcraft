@@ -14,9 +14,11 @@ import java.io.InputStreamReader
 object Main extends App {
   //Initializes system, Player Manager, and Room Manager
   val system = ActorSystem("Main")
-  val entityManager = system.actorOf(Props[EntityManager], "PlayerManager")
+  val playerManager = system.actorOf(Props[PlayerManager], "PlayerManager")
   val roomManager = system.actorOf(Props[RoomManager], "RoomManager")
-  
+  val npcManager = system.actorOf(Props[NPCManager], "NPCManager")
+  val activityManager = system.actorOf(Props[ActivityManager], "ActivityManager")
+
   //Checks and schedules checks for connections
   implicit val ec = system.dispatcher
   def checkConnections(): Unit = {
@@ -28,10 +30,11 @@ object Main extends App {
       Future {
         out.println("What is your name? \nNo spaces. Letters only.")
         val name = in.readLine()
-        entityManager ! EntityManager.NewPlayer(name, Player.playerHealth, "FirstRoom", new MutableDLList[Item](), in, out, sock)
+        playerManager ! PlayerManager.NewPlayer(name, Player.playerHealth, "FirstRoom", new MutableDLList[Item](), in, out, sock)
       }
     }
   }
-  system.scheduler.schedule(0.seconds, 0.1.seconds, entityManager, EntityManager.CheckInput)
+  system.scheduler.schedule(0.seconds, 0.1.seconds, activityManager, ActivityManager.CheckQueue)
+  system.scheduler.schedule(0.seconds, 0.1.seconds, playerManager, PlayerManager.CheckInput)
   checkConnections()
 }

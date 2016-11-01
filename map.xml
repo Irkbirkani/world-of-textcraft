@@ -7,8 +7,8 @@ Exit to the east.</description>
 	<room name="Second Room" keyword="SecondRoom">
 		<description>You are in the second Room. 
 Exits to the south, east, or west.</description>
-		<item name="sword">It Looks Sharp</item>
-		<item name="torch">It's not that bright</item>
+		<item name="sword" damage="5" speed="2" armor="0" itype ="weapon">It Looks Sharp</item>
+		<item name="torch" damage="0" speed="0" armor="0" itype="misc">It's not that bright</item>
 		<exits>,FourthRoom,ThirdRoom,FirstRoom,,</exits>
 	</room>
 	<room name="Third Room" keyword="ThirdRoom">
@@ -21,14 +21,14 @@ Exits to the south or east.
 	<room name="Fourth Room" keyword="FourthRoom">
 		<description>You enter room number Four.
 Exits to the north, south, or west.</description>
-		<item name="your bank balance">you wish it were as high as your GPA.</item>
+		<item name="your bank balance" damage="0" speed="0" armor="0" itype="misc">you wish it were as high as your GPA.</item>
 		<exits>SecondRoom,SeventhRoom,,SixthRoom,,</exits>
 	</room>
 	<room name="Fifth Room" keyword="FifthRoom">
 		<description>The Fifth Room. 
 Exits to the north, south, or west.
 		</description>
-		<item name="shield">It's broken</item>
+		<item name="shield" damage="1" speed="10" armor="10" itype="armor">It's broken</item>
 		<exits>ThirdRoom,NinthRoom,,SeventhRoom,,</exits>
 	</room>
 	<room name="Sixth Room" keyword="SixthRoom">
@@ -39,7 +39,7 @@ Exit to the east.</description>
 	<room name="Seventh Room" keyword="SeventhRoom">
 		<description>The Crossroads of the rooms.
 Exits to the north, south, east, or west.</description>
-		<item name="thing">The most amazing thing you ever did see</item>
+		<item name="thing" damage="10" speed="3" armor="0" itype="weapon">The most amazing thing you ever did see</item>
 		<exits>FourthRoom,NinthRoom,FifthRoom,EighthRoom,,</exits>
 	</room>
 	<room name="Eighth Room" keyword="EighthRoom">
@@ -50,9 +50,9 @@ Salida a east.</description>
 	<room name="Ninth Room" keyword="NinthRoom">
 		<description>The Second Highest room number.
 Exit north.</description>
-		<item name="hat">its pretty rad looking.</item>
-		<item name="ball">it might be a soccer ball?</item>
-		<item name="bat">It's the flying kind not the hitting kind</item>
+		<item name="hat" damage="0" speed="0" armor="5" itype="armor">its pretty rad looking.</item>
+		<item name="ball" damage="2" speed="1" armor="0" itype="weapon">it might be a soccer ball?</item>
+		<npcs name="bat" location="NinthRoom">50</npcs>
 		<exits>SeventhRoom,,,,,,</exits>
 	</room>
 	<room name="Tenth Room" keyword="TenthRoom">

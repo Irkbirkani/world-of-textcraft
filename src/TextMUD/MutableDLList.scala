@@ -107,6 +107,9 @@ class MutableDLList[A] extends mutable.Buffer[A] {
     }
     ret
   }
+  def fill(size:Int)(a:A):MutableDLList[A] ={
+    ???
+  }
   
   override def toString = mkString("MutableDLList(", ", ", ")")
 }
