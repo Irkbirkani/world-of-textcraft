@@ -8,7 +8,6 @@ class Room(
     keyword: String,
     val name: String,
     val description: String,
-    private var npcs: List[ActorRef],
     private var _items: MutableDLList[Item],
     private val exits: Array[String]) extends Actor {
 
@@ -17,6 +16,8 @@ class Room(
   def receive = {
     case PrintDescription =>
       sender ! Player.PrintMessage(printDescription)
+    case NPCExit(dir) =>
+      sender ! NPC.EnterRoom(getExit(dir))
     case GetExit(dir) =>
       sender ! Player.TakeExit(getExit(dir))
     case LinkRooms(rooms) =>
@@ -54,6 +55,10 @@ class Room(
 
   private var actorExits: Array[Option[ActorRef]] = Array.fill(6)(None)
 
+  //Room NPC Management
+  private var _npcs: List[ActorRef] = null
+  def npcs = _npcs
+
   //Room Player Management
   private var _players: List[ActorRef] = List()
 
@@ -89,9 +94,10 @@ object Room {
   case class GetItem(name: String, itemName: String)
   case class DropItem(name: String, item: Item)
   //Exit Management
+  case class NPCExit(dir:Int)
   case class GetExit(dir: Int)
   case class LinkRooms(rooms: Map[String, ActorRef])
-  //Room Management
+  //Room Player Management
   case class LeaveRoom(p: ActorRef, name: String)
   case class EnterRoom(p: ActorRef, name: String)
   case class LeaveGame(p: ActorRef, name: String)
@@ -106,6 +112,6 @@ object Room {
     val item = new MutableDLList[Item]()
     (n \ "item").map { inode => Item(inode) }.toList.foreach(_ +=: item)
     val exits = (n \ "exits").text.split(",").padTo(6, "")
-    new Room(keyword, name, description, npc, item, exits)
+    new Room(keyword, name, description, item, exits)
   }
 }

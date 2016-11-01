@@ -11,6 +11,8 @@ class RoomManager extends Actor {
   def receive = {
     case EnterRoom(loc, p) =>
       p ! Player.TakeExit(Some(rooms(loc)))
+    case NPCEnter(loc, npc) =>
+      npc ! NPC.EnterRoom(Some(rooms(loc)))
   }
   val rooms = {
     (xml.XML.loadFile("map.xml") \ "room").map { n =>
@@ -24,4 +26,6 @@ class RoomManager extends Actor {
 object RoomManager {
   //Puts player in a room
   case class EnterRoom(loc: String, p: ActorRef)
+  //Puts NPC in room
+  case class NPCEnter(loc:String, npc:ActorRef)
 }

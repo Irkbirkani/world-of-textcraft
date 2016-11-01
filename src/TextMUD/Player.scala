@@ -11,6 +11,7 @@ import java.net.Socket
 
 class Player(
     val name: String,
+    private var health:Double,
     private var _inventory: MutableDLList[Item],
     val input: BufferedReader,
     val output: PrintStream,
@@ -93,7 +94,7 @@ class Player(
   //Player Tell Messaging
   def tellMessage(s: String): Unit = {
     val Array(_, to, msg) = s.split(" +", 3)
-    Main.playerManager ! PlayerManager.PrintTellMessage(to, name, msg)
+    Main.entityManager ! EntityManager.PrintTellMessage(to, name, msg)
   }
 
   //Process Player Input
@@ -120,7 +121,7 @@ class Player(
       case None => None
     } //player messaging
     else if (in.startsWith("shout")) {
-      Main.playerManager ! PlayerManager.PrintShoutMessage(in.drop(6), name)
+      Main.entityManager ! EntityManager.PrintShoutMessage(in.drop(6), name)
     } else if (in.startsWith("say")) location ! Room.SayMessage(in.drop(4), name)
     else if (in.startsWith("tell")) tellMessage(in)
     //help command
@@ -136,4 +137,6 @@ object Player {
   case class PrintMessage(msg: String)
   case class AddToInventory(item: Option[Item])
   case class TakeExit(dir: Option[ActorRef])
+  
+  val playerHealth = 100.0
 }

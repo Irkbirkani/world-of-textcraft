@@ -14,7 +14,7 @@ import java.io.InputStreamReader
 object Main extends App {
   //Initializes system, Player Manager, and Room Manager
   val system = ActorSystem("Main")
-  val playerManager = system.actorOf(Props[PlayerManager], "PlayerManager")
+  val entityManager = system.actorOf(Props[EntityManager], "PlayerManager")
   val roomManager = system.actorOf(Props[RoomManager], "RoomManager")
   
   //Checks and schedules checks for connections
@@ -28,10 +28,10 @@ object Main extends App {
       Future {
         out.println("What is your name? \nNo spaces. Letters only.")
         val name = in.readLine()
-        playerManager ! PlayerManager.NewPlayer(name, "FirstRoom", new MutableDLList[Item](), in, out, sock)
+        entityManager ! EntityManager.NewPlayer(name, Player.playerHealth, "FirstRoom", new MutableDLList[Item](), in, out, sock)
       }
     }
   }
-  system.scheduler.schedule(0.seconds, 0.1.seconds, playerManager, PlayerManager.CheckInput)
+  system.scheduler.schedule(0.seconds, 0.1.seconds, entityManager, EntityManager.CheckInput)
   checkConnections()
 }

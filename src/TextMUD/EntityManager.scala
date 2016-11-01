@@ -8,20 +8,23 @@ import akka.actor.Props
 import java.io.BufferedReader
 import java.net.Socket
 
-class PlayerManager extends Actor {
-  import PlayerManager._
+class EntityManager extends Actor {
+  import EntityManager._
   //Actor Management
   def receive = {
     case CheckInput =>
       context.children.foreach(_ ! Player.ProcessInput)
-    case NewPlayer(name, loc, inv, in, out, sock) =>
+    case NewPlayer(name, health,loc, inv, in, out, sock) =>
       if (context.child(name).nonEmpty) {
         out.println("Name taken.")
         sock.close
       } else {
-        val p = context.actorOf(Props(new Player(name, inv, in, out, sock)), name)
+        val p = context.actorOf(Props(new Player(name,health, inv, in, out, sock)), name)
         Main.roomManager ! RoomManager.EnterRoom(loc, p)
       }
+    case NewNPC(name, health,loc ) =>
+      val n = context.actorOf(Props(new NPC(name, health)),name)
+      Main.roomManager ! RoomManager.NPCEnter(loc,n)
     case PrintShoutMessage(msg, name) =>
       context.children.foreach(_ ! Player.PrintMessage(s"$name shouts: $msg"))
     case PrintTellMessage(to, from, msg) =>
@@ -35,11 +38,12 @@ class PlayerManager extends Actor {
   }
 }
 
-object PlayerManager {
-  //Tells each player to check for input
+object EntityManager {
+  //Player Management
   case object CheckInput
-  //Creates new player.
-  case class NewPlayer(name: String, location: String, inventory: MutableDLList[Item], input: BufferedReader, output: PrintStream, sock: Socket)
+  case class NewPlayer(name: String, health:Double,location: String, inventory: MutableDLList[Item], input: BufferedReader, output: PrintStream, sock: Socket)
+  //NPC Management
+  case class NewNPC(name:String, health:Double, loc:String)
   //Messaging Management
   case class PrintShoutMessage(msg: String, name: String)
   case class PrintTellMessage(to: String, from: String, msg: String)
