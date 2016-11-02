@@ -110,7 +110,11 @@ class MutableDLList[A] extends mutable.Buffer[A] {
   
   def fill(size:Int)(a:A):MutableDLList[A] ={
     val ret = new MutableDLList[A]()
-    for (i <- 0 until size) ret.insert(i, a)
+    var count = 0
+    while (count < size) {
+      ret += a
+      count +=1
+    }
     ret
   }
   
