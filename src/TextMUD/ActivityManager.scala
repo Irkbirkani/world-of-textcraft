@@ -11,14 +11,12 @@ class ActivityManager extends Actor {
       val a = new Activity(delay + ticks, sender, message)
       queue.enqueue(a)
     case CheckQueue =>
-      if (queue.peek != null) {
         ticks += 1
-        if (queue.peek.time == ticks) {
+        println(queue.isEmpty + " " + (if (!queue.isEmpty) queue.peek else " "))
+        while (!queue.isEmpty && queue.peek.time == ticks) {
           val act = queue.dequeue()
           act.sender ! act.message
-
         }
-      }
   }
 
   private val queue: SortedListPriorityQueue[Activity] = new SortedListPriorityQueue[Activity](_.time < _.time)

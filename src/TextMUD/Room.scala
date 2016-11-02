@@ -46,7 +46,9 @@ class Room(
          sender ! Player.PrintMessage("A swing and a miss!") 
        }
        else {
+         println("step 2 started")
          sender ! KillCmnd(ch(0)) 
+         println("step 2 sent")
        }
   }
 

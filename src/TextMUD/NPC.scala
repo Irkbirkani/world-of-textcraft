@@ -11,6 +11,7 @@ case class NPC(name: String, health: Double) extends Actor {
   private var _location: ActorRef = null
   def location = _location
 
+  private var victim:Option[ActorRef] = None
   def receive = {
     case TakeExit(dir) =>
       dir match {
@@ -23,7 +24,12 @@ case class NPC(name: String, health: Double) extends Actor {
     case RequestMove =>
       this.move(util.Random.nextInt(6))
       Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
-
+    case KillCmnd(c) =>
+      var victim = c
+      Main.activityManager ! ActivityManager.Enqueue(10, AttackNow)
+    case AttackNow =>
+      victim.foreach(c => c ! SendDamage(location, 5, c))
+      
   }
 
   def move(direction: Int): Unit = {

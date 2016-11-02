@@ -11,7 +11,7 @@ class SortedListPriorityQueue[A: ClassTag](comp: (A, A) => Boolean) extends Prio
 
   def enqueue(obj: A): Unit = {
     var rover = end.prev
-    while (rover != end && comp(obj, rover.data) == false) rover = rover.prev
+    while (rover != end && comp(obj, rover.data)) rover = rover.prev
     rover.next.prev = new Node(obj, rover, rover.next)
     rover.next = rover.next.prev
   }

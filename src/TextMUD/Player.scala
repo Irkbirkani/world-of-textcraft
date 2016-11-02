@@ -56,19 +56,38 @@ class Player(
           output.println("You can't go that way")
       }
     case KillCmnd(c) =>
-      var victim = c
-      Main.activityManager ! ActivityManager.Enqueue(10, GiveDamage)
-    case GiveDamage =>
-      victim.foreach(c => c ! SendDamage(location, 5))
-    case SendDamage(loc, dmg) =>
+      victim = Some(c)
+      output.println("You are hitting " + c.path.name)
+      println("step 3 started")
+      Main.activityManager ! ActivityManager.Enqueue(10, AttackNow)
+      println("step 3 sent")
+    case AttackNow =>
+      victim.foreach(c => c ! SendDamage(location, 5, c))
+    case SendDamage(loc, dmg, c) =>
       if (loc == location) {
         val realDamage = takeDamage(dmg)
-        sender ! DamageTaken(realDamage)
+        sender ! DamageTaken(realDamage, isAlive)
+        output.println(c.path.name + " dealt " + dmg + "damage!")
+        if (victim.isEmpty) {
+          victim = Some(sender)
+          Main.activityManager ! ActivityManager.Enqueue(10, AttackNow)
+        }
+        if (!isAlive) {
+          output.println("You have died.")
+          this.sock.close
+        }
       } else {
-        sender ! PrintMessage("You are having a hard time findinng them.")
+        sender ! PrintMessage("You are having a hard time finding them.")
       }
-    case DamageTaken(dmg) =>
-      
+    case DamageTaken(dmg, alive) =>
+      if (alive) {
+        output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "!")
+        kill(victim.get.path.name)
+      } else {
+        output.println("you killed " + victim.get.path.name + ".")
+        victim = None
+      }
+
   }
 
   //Inventory Management
@@ -156,8 +175,8 @@ class Player(
   //
   //  def printEquipment() = {
   //    for (i <- equipment) i match {
-  //      case Some(item) => PrintMessage(item.name)
-  //      case None => PrintMessage("Empty slot.")
+  //      case Some(item) => output.println(item.name)
+  //      case None => output.println("Empty slot.")
   //    }
   //  }
 
@@ -167,8 +186,12 @@ class Player(
   }
 
   //Combat commands
+  var isAlive = true
+
   def kill(pl: String): Unit = {
+    println("step 1 started")
     location ! Room.CheckInRoom(pl)
+    println("step 1 sent")
   }
   def d6 = util.Random.nextInt(6) + 1
 
@@ -178,10 +201,7 @@ class Player(
     else if (damage >= 1 && damage <= 5) dmg
     else dmg * 2
     _health -= actDmg
-    if (_health <= 0) {
-        location ! Room.SayMessage("has died.", name)
-        this.sock.close()
-    }
+    if (health <= 0) isAlive = false
     actDmg
   }
 
@@ -223,8 +243,9 @@ class Player(
     //    else if ("character".startsWith(in)) printEquipment
     //combat commands
     else if (in.startsWith("kill")) kill(in.drop(5))
-
-    //player messaging
+    else if ("health".startsWith(in)) {
+      output.println("Health at: " + health)
+    } //player messaging
     else if (in.startsWith("shout")) {
       Main.playerManager ! PlayerManager.PrintShoutMessage(in.drop(6), name)
     } else if (in.startsWith("say")) location ! Room.SayMessage(in.drop(4), name)

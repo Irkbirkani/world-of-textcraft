@@ -52,7 +52,7 @@ Salida a east.</description>
 Exit north.</description>
 		<item name="hat" damage="0" speed="0" armor="5" itype="3">its pretty rad looking.</item>
 		<item name="ball" damage="2" speed="1" armor="0" itype="1">it might be a soccer ball?</item>
-		<npcs name="bat" location="NinthRoom">50</npcs>
+		<npcs2 name="bat" location="NinthRoom">50</npcs2>
 		<exits>SeventhRoom,,,,,,</exits>
 	</room>
 	<room name="Tenth Room" keyword="TenthRoom">
