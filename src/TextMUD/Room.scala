@@ -25,10 +25,8 @@ class Room(
     //Item Management
     case GetItem(name, itemName) =>
       sender ! Player.AddToInventory(getItem(itemName))
-      chars.foreach(p => p ! Player.PrintMessage(name + " picked up " + itemName + "."))
     case DropItem(name, item) =>
       dropItem(item)
-      chars.foreach(p => p ! Player.PrintMessage(name + " dropped " + item.name + "."))
     //Player Management
     case EnterRoom(pl, name) =>
       chars.foreach(p => p ! Player.PrintMessage(name + " entered the room."))

@@ -1,7 +1,6 @@
 package TextMUD
 
 import scala.reflect.ClassTag
-import src.TextMUD.PriorityQueue
 
 class SortedListPriorityQueue[A: ClassTag](comp: (A, A) => Boolean) extends PriorityQueue[A] {
   private var default: A = _

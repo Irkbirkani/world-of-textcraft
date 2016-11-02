@@ -1,4 +1,4 @@
-package src.TextMUD
+package TextMUD
 
 trait PriorityQueue[A] {
 

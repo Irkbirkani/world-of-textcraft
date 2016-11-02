@@ -21,7 +21,6 @@ case class NPC(name: String, health: Double) extends Actor {
         case None =>
       }
     case RequestMove =>
-      println("Message Recieved")
       this.move(util.Random.nextInt(6))
       Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
 

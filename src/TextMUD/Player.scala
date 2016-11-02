@@ -37,6 +37,7 @@ class Player(
       item match {
         case Some(item) =>
           addToInventory(item)
+          location ! Room.SayMessage("picked up "+item.name+".", name)
         case None =>
           output.println("Item not found")
       }
@@ -65,7 +66,6 @@ class Player(
         Some(item)
       }
       case None =>
-        output.println("You can't drop something you don't have.")
         None
     }
   }
@@ -91,18 +91,56 @@ class Player(
   }
 
   //Equipment management
-  private var _equipment: List[Option[Item]] = List.fill(5)(None)
+  private var _equipment: MutableDLList[Option[Item]] = new MutableDLList[Option[Item]].fill(5)(None)
   val equipment = _equipment
-  
-  def equip(item:String):Unit = {
+//  println(equipment.length)
+
+  def equip(item: String): Unit = {
     val itm = inventory.filter(_.name != item)
     if (itm.length == 0) PrintMessage("You cannot equip an item you do not have in your inventory.")
     else if (itm(0).itype == Item.misc) PrintMessage("You cannot equip that.")
-    else if (itm(0).itype == Item.armor) {
-      
+    else if (itm(0).itype == Item.weapon) {
+      if (equipment(1) == None) {
+        _equipment.update(1, getFromInventory(item))
+        PrintMessage(itm(0).name + " equipped.")
+      } else if (equipment(2) == None) {
+        _equipment.update(2, getFromInventory(item))
+        PrintMessage(itm(0).name + " equipped.")
+      } else PrintMessage("All weapon slots are full")
+    } else if (itm(0).itype == Item.armor) {
+      if (equipment(3) == None) {
+        _equipment.update(3, getFromInventory(item))
+        PrintMessage(itm(0).name + " equipped.")
+      } else if (equipment(4) == None) {
+        _equipment.update(4, getFromInventory(item))
+        PrintMessage(itm(0).name + " equipped.")
+      } else if (equipment(5) == None) {
+        _equipment.update(5, getFromInventory(item))
+        PrintMessage(itm(0).name + " equipped.")
+      } else PrintMessage("All armor slots are full.")
     }
   }
-  
+
+  def unequip(item: String): Unit = {
+    for (i <- 0 to equipment.length) {
+      equipment(i) match{
+        case Some(itm) =>
+          if (itm.name == item) {
+            _equipment.remove(i)
+            addToInventory(itm)
+            PrintMessage(item + "unequipped and added to Inventory.")
+          }
+        case None =>
+      }      
+    }
+  }
+  def printEquipment() = {
+    for (i<-equipment) i match {
+      case Some(item) => PrintMessage(item.name)
+      case None => PrintMessage("Empty slot.")
+    }
+  }
+
   //Move Player
   private def move(direction: Int): Unit = {
     location ! Room.GetExit(direction)
@@ -141,9 +179,16 @@ class Player(
     else if (in.startsWith("drop")) getFromInventory(in.trim.drop(5)) match {
       case Some(item) =>
         location ! Room.DropItem(name, item)
-      case None => None
+        location ! Room.SayMessage("dropped "+item.name+".",name)
+      case None => 
+        PrintMessage("You can't drop what you dont have.")
+        None
     }
-    else if (in.startsWith("kill")) kill(in.drop(5))
+    //player equipment
+    else if (in.startsWith("equip")) equip(in.drop(6))
+    else if (in.startsWith("unequip")) unequip(in.drop(8))
+    else if ("character".startsWith(in)) printEquipment
+//    else if (in.startsWith("kill")) kill(in.drop(5))
 
     //player messaging
     else if (in.startsWith("shout")) {

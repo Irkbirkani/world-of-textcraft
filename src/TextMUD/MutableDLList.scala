@@ -107,11 +107,19 @@ class MutableDLList[A] extends mutable.Buffer[A] {
     }
     ret
   }
+  
   def fill(size:Int)(a:A):MutableDLList[A] ={
-    ???
+    val ret = new MutableDLList[A]()
+    for (i <- 0 until size) ret.insert(i, a)
+    ret
   }
   
   override def toString = mkString("MutableDLList(", ", ", ")")
+}
+
+object MutableDLList extends App {
+  val a = new MutableDLList[Int].fill(5)(0)
+  println(a.length)
 }
 
 
