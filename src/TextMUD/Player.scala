@@ -123,65 +123,65 @@ class Player(
   }
 
   //Equipment management
-  private var _equipment: MutableDLList[Option[Item]] = new MutableDLList[Option[Item]].fill(5)(None)
-  val equipment = _equipment
-  //  println(equipment.length)
-  //
-  //  def equip(item: String): Unit = {
-  //    val itm = getFromInventory(item)
-  //    itm match {
-  //      case None =>
-  //        PrintMessage("You cannot equip an item you do not have in your inventory.")
-  //      case Some(i) =>
-  //        i.itype match {
-  //          case Item.misc => PrintMessage("You cannot equip that.")
-  //          case Item.weapon =>
-  //            equipment(0) match {
-  //              case None => _equipment.update(0, itm)
-  //              case Some(itype) => equipment(1) match {
-  //                case None => _equipment.update(1, itm)
-  //                case Some(itype) => PrintMessage("Weapon slots are full.")
-  //              }
-  //            }
-  //          case Item.armor =>
-  //            equipment(2) match {
-  //              case None => _equipment.update(2, itm)
-  //              case Some(itype) => equipment(3) match {
-  //                case None => _equipment.update(3, itm)
-  //                case Some(itype) => equipment(4) match {
-  //                  case None => _equipment.update(4, itm)
-  //                  case Some(itype) => PrintMessage("Armor slots are full.")
-  //                }
-  //              }
-  //            }
-  //        }
-  //    }
-  //  }
-  //  def unequip(item: String): Unit = {
-  //    for (i <- 0 to equipment.length) {
-  //      equipment(i) match {
-  //        case Some(itm) =>
-  //          if (itm.name == item) {
-  //            _equipment.remove(i)
-  //            addToInventory(itm)
-  //            PrintMessage(item + "unequipped and added to Inventory.")
-  //          }
-  //        case None =>
-  //      }
-  //    }
-  //  }
-  //
-  //  def printEquipment() = {
-  //    for (i <- equipment) i match {
-  //      case Some(item) => output.println(item.name)
-  //      case None => output.println("Empty slot.")
-  //    }
-  //  }
+  private var _equipment: List[EquippedItem] = List()
+  def equipment = _equipment
+
+  def equip(itemName: String): Unit = {
+    getFromInventory(itemName) match {
+      case Some(item) =>
+        val eqItem = new EquippedItem(item.itype, item)
+        if (eqItem.bodyPart == Item.chest || eqItem.bodyPart == Item.head || eqItem.bodyPart == Item.legs
+          && equipment.count(_.bodyPart == eqItem.bodyPart) == 0) {
+          _equipment = eqItem :: _equipment
+          output.println(eqItem.item.name + " equipped.")
+        } else if (eqItem.bodyPart == Item.hand
+          && equipment.count(_.bodyPart == Item.twoHand) == 0
+          && equipment.count(_.bodyPart == eqItem.bodyPart) <= 1) {
+          _equipment = eqItem :: _equipment
+          println(equipment.length)
+          output.println(eqItem.item.name + " equipped.")
+        } else if (eqItem.bodyPart == Item.offHand
+          && equipment.count(_.bodyPart == Item.twoHand) == 0
+          && equipment.count(_.bodyPart == eqItem.bodyPart) == 0) {
+          _equipment = eqItem :: _equipment
+          output.println(eqItem.item.name + " equipped.")
+        } else if (eqItem.bodyPart == Item.twoHand
+          && equipment.count(_.bodyPart == Item.hand) == 0
+          && equipment.count(_.bodyPart == Item.offHand) == 0
+          && equipment.count(_.bodyPart == eqItem.bodyPart) == 0) {
+          _equipment = eqItem :: _equipment
+          output.println(eqItem.item.name + " equipped.")
+        } else {
+          addToInventory(item)
+          output.println("Cannot equip that.")
+        }
+      case None => output.println(itemName + " is not in your inventory.")
+    }
+  }
+
+  def unequip(itemName: String): Unit = {
+    _equipment.find(_.item.name == itemName) match {
+      case Some(eq) =>
+        _equipment = _equipment.filter(_ != eq)
+        addToInventory(eq.item)
+        output.println(eq.item.name + " unequipped and added to inventory.")
+      case None =>
+        output.println(itemName + " not equipped.")
+    }
+  }
+
+  def printEquipment = {
+    if (equipment.length == 0) {
+      output.println("Nothing equipped.")
+    } else {
+      equipment.foreach(c => output.println(c.bodyPart + ": " + c.item.name))
+    }
+  }
 
   //Move Player
   private def move(direction: Int): Unit = {
-    if (victim.isEmpty){
-    location ! Room.GetExit(direction)
+    if (victim.isEmpty) {
+      location ! Room.GetExit(direction)
     }
   }
 
@@ -236,13 +236,13 @@ class Player(
         None
     }
     //player equipment
-    //    else if (in.startsWith("equip")) equip(in.drop(6))
-    //    else if (in.startsWith("unequip")) unequip(in.drop(8))
-    //    else if ("character".startsWith(in)) printEquipment
+    else if (in.startsWith("equip")) equip(in.drop(6))
+    else if (in.startsWith("unequip")) unequip(in.drop(8))
+    else if ("character".startsWith(in)) printEquipment
     //combat commands
     else if (in.startsWith("kill")) kill(in.drop(5))
     else if ("health".startsWith(in)) output.println("Health at: " + health)
-    else if ("flee".startsWith(in)&&victim.nonEmpty) move(util.Random.nextInt(5))
+    else if ("flee".startsWith(in) && victim.nonEmpty) location ! Room.GetExit(util.Random.nextInt(5))
     //player messaging
     else if (in.startsWith("shout")) {
       Main.playerManager ! PlayerManager.PrintShoutMessage(in.drop(6), name)

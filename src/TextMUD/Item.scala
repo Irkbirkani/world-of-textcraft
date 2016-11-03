@@ -2,7 +2,7 @@
 
 package TextMUD
 
-case class Item(name: String, description: String, damage: Int, speed: Int, armor: Int, itype:Int) {
+case class Item(name: String, description: String, damage: Int, speed: Int, armor: Int, itype: String) {
 
 }
 
@@ -12,7 +12,13 @@ object Item {
       n.text, (n \ "@damage").text.toInt,
       (n \ "@speed").text.toInt,
       (n \ "@armor").text.toInt,
-      (n \ "@itype").text.toInt)
+      (n \ "@itype").text)
   }
-  val itemTypeMap = Map("main hand"-> 0, "off hand" -> 1, "two hand" -> 2, "head" -> 3, "chest" -> 4, "legs"-> 5, "misc" -> 6)
+  val head = "head"
+  val chest = "chest"
+  val legs = "legs"
+  val hand = "hand"
+  val twoHand = "twoHand"
+  val offHand = "offHand"
 }
+case class EquippedItem(bodyPart: String, item: Item)
