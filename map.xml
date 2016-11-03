@@ -15,7 +15,7 @@ Exits to the south, east, or west.</description>
 		<description>You are in the Third Room. 
 Exits to the south or east.
 		</description>
-		<npcs name="Muffin" location="ThirdRoom">1000</npcs>
+		<npcs name="Muffin" location="ThirdRoom" attack="50" armor="50">1000</npcs>
 		<exits>,FifthRoom,SecondRoom,,,</exits>
 	</room>
 	<room name="Fourth Room" keyword="FourthRoom">
@@ -52,7 +52,7 @@ Salida a east.</description>
 Exit north.</description>
 		<item name="hat" damage="0" speed="0" armor="5" itype="head">its pretty rad looking.</item>
 		<item name="ball" damage="2" speed="1" armor="0" itype="offHand">it might be a soccer ball?</item>
-		<npcs2 name="bat" location="NinthRoom">50</npcs2>
+		<npcs name="bat" location="NinthRoom" attack = "2" armor = "1">25</npcs>
 		<exits>SeventhRoom,,,,,,</exits>
 	</room>
 	<room name="Tenth Room" keyword="TenthRoom">

@@ -58,9 +58,9 @@ class Player(
     case KillCmnd(c) =>
       victim = Some(c)
       output.println("You are hitting " + c.path.name)
-      Main.activityManager ! ActivityManager.Enqueue(10, AttackNow)
+      Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
     case AttackNow =>
-      victim.foreach(c => c ! SendDamage(location, 5, c))
+      victim.foreach(c => c ! SendDamage(location, damage, c))
     case SendDamage(loc, dmg, c) =>
       if (loc == location) {
         val realDamage = takeDamage(dmg)
@@ -68,7 +68,7 @@ class Player(
         output.println(c.path.name + " dealt " + dmg + " damage!")
         if (victim.isEmpty) {
           victim = Some(sender)
-          Main.activityManager ! ActivityManager.Enqueue(10, AttackNow)
+          Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
         }
         if (!isAlive) {
           output.println("You have died.")
@@ -178,6 +178,32 @@ class Player(
     }
   }
 
+  def armor = {
+    var sum = 0
+    for (i <- equipment) sum += i.item.armor
+    sum
+  }
+
+  def damage = {
+    if (equipment.isEmpty) {
+      punchDamage
+    } else {
+      var sum = 0
+      for (i <- equipment) sum += i.item.damage
+      sum
+    }
+  }
+
+  def speed = {
+    if (equipment.isEmpty) {
+      punchSpeed
+    } else {
+    var sum = 0
+    for (i <- equipment) sum += i.item.speed
+    sum
+    }
+  }
+
   //Move Player
   private def move(direction: Int): Unit = {
     if (victim.isEmpty) {
@@ -191,16 +217,19 @@ class Player(
   def kill(pl: String): Unit = {
     location ! Room.CheckInRoom(pl)
   }
+
+  private var sum = 0
+
   def d6 = util.Random.nextInt(6) + 1
 
-  def takeDamage(dmg: Int) = {
+  def takeDamage(dmg: Double) = {
     val damage = d6
     val actDmg = if (damage == 0) 0
     else if (damage >= 1 && damage <= 5) dmg
     else dmg * 2
     _health -= actDmg
     if (health <= 0) isAlive = false
-    actDmg
+    actDmg - (armor * armorReduc)
   }
 
   //Player Tell Messaging
@@ -261,5 +290,7 @@ object Player {
   case class PrintMessage(msg: String)
   case class AddToInventory(item: Option[Item])
 
+  val punchDamage = 3
+  val punchSpeed = 10
   val playerHealth = 100.0
 }
