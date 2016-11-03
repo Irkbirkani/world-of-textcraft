@@ -56,35 +56,38 @@ class Player(
           output.println("You can't go that way")
       }
     case KillCmnd(c) =>
+      println(c)
       victim = Some(c)
       output.println("You are hitting " + c.path.name)
       Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
     case AttackNow =>
-      victim.foreach(c => c ! SendDamage(location, damage, c))
+      if (victim.get != self) {
+        victim.foreach(c => c ! SendDamage(location, damage, c))
+      }
     case SendDamage(loc, dmg, c) =>
       if (loc == location) {
         val realDamage = takeDamage(dmg)
         sender ! DamageTaken(realDamage, isAlive)
         output.println(c.path.name + " dealt " + dmg + " damage!")
-        if (victim.isEmpty) {
+        if (isAlive == false) {
+          location ! Room.HasDied(self, name)
+          Main.activityManager ! ActivityManager.Enqueue(10, Respawn)
+        } else if (victim.isEmpty) {
           victim = Some(sender)
           Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
-        }
-        if (!isAlive) {
-          output.println("You have died.")
-          this.sock.close
         }
       } else {
         sender ! PrintMessage("You are having a hard time finding them.")
       }
     case DamageTaken(dmg, alive) =>
-      if (alive) {
+      if (alive == true) {
         output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "!")
         kill(victim.get.path.name)
       } else {
         output.println("you killed " + victim.get.path.name + ".")
         victim = None
       }
+    case Respawn =>
 
   }
 
@@ -138,7 +141,6 @@ class Player(
           && equipment.count(_.bodyPart == Item.twoHand) == 0
           && equipment.count(_.bodyPart == eqItem.bodyPart) <= 1) {
           _equipment = eqItem :: _equipment
-          println(equipment.length)
           output.println(eqItem.item.name + " equipped.")
         } else if (eqItem.bodyPart == Item.offHand
           && equipment.count(_.bodyPart == Item.twoHand) == 0
@@ -198,9 +200,9 @@ class Player(
     if (equipment.isEmpty) {
       punchSpeed
     } else {
-    var sum = 0
-    for (i <- equipment) sum += i.item.speed
-    sum
+      var sum = 0
+      for (i <- equipment) sum += i.item.speed
+      sum
     }
   }
 

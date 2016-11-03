@@ -37,17 +37,19 @@ class Room(
     case LeaveGame(pl, name) =>
       chars.foreach(p => p ! Player.PrintMessage(name + " left the game."))
       removePlayer(pl)
+    case HasDied(pl,name)=>
+      chars.foreach(p => p ! Player.PrintMessage(name + " has died!"))
+      removePlayer(pl)
     //Messages  
     case SayMessage(msg, name) =>
       chars.foreach(p => p ! Player.PrintMessage(s"$name: $msg"))
     case CheckInRoom(c) =>
-      val ch = chars.filter( _.path.name == c) 
-       if (ch.length == 0) {
-         sender ! Player.PrintMessage("A swing and a miss!") 
-       }
-       else {
-         sender ! KillCmnd(ch(0)) 
-       }
+      val ch = chars.filter(_.path.name == c)
+      if (ch.length == 0) {
+        sender ! Player.PrintMessage("A swing and a miss!")
+      } else {
+        sender ! KillCmnd(ch(0))
+      }
   }
 
   //Print Description
@@ -101,14 +103,15 @@ object Room {
   //Exit Management
   case class GetExit(dir: Int)
   case class LinkRooms(rooms: Map[String, ActorRef])
-  //Room Player Management
+  //Room Character Management
   case class LeaveRoom(p: ActorRef, name: String)
   case class EnterRoom(p: ActorRef, name: String)
+  case class HasDied(p: ActorRef, name: String)
   case class LeaveGame(p: ActorRef, name: String)
   //Messaging
   case class SayMessage(msg: String, name: String)
   //Combat Management
-  case class CheckInRoom(c:String)
+  case class CheckInRoom(c: String)
 
   def apply(n: xml.Node): Room = {
     val keyword = (n \ "@keyword").text
