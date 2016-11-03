@@ -58,16 +58,14 @@ class Player(
     case KillCmnd(c) =>
       victim = Some(c)
       output.println("You are hitting " + c.path.name)
-      println("step 3 started")
       Main.activityManager ! ActivityManager.Enqueue(10, AttackNow)
-      println("step 3 sent")
     case AttackNow =>
       victim.foreach(c => c ! SendDamage(location, 5, c))
     case SendDamage(loc, dmg, c) =>
       if (loc == location) {
         val realDamage = takeDamage(dmg)
         sender ! DamageTaken(realDamage, isAlive)
-        output.println(c.path.name + " dealt " + dmg + "damage!")
+        output.println(c.path.name + " dealt " + dmg + " damage!")
         if (victim.isEmpty) {
           victim = Some(sender)
           Main.activityManager ! ActivityManager.Enqueue(10, AttackNow)
@@ -182,16 +180,16 @@ class Player(
 
   //Move Player
   private def move(direction: Int): Unit = {
+    if (victim.isEmpty){
     location ! Room.GetExit(direction)
+    }
   }
 
   //Combat commands
   var isAlive = true
 
   def kill(pl: String): Unit = {
-    println("step 1 started")
     location ! Room.CheckInRoom(pl)
-    println("step 1 sent")
   }
   def d6 = util.Random.nextInt(6) + 1
 
@@ -243,9 +241,9 @@ class Player(
     //    else if ("character".startsWith(in)) printEquipment
     //combat commands
     else if (in.startsWith("kill")) kill(in.drop(5))
-    else if ("health".startsWith(in)) {
-      output.println("Health at: " + health)
-    } //player messaging
+    else if ("health".startsWith(in)) output.println("Health at: " + health)
+    else if ("flee".startsWith(in)&&victim.nonEmpty) move(util.Random.nextInt(5))
+    //player messaging
     else if (in.startsWith("shout")) {
       Main.playerManager ! PlayerManager.PrintShoutMessage(in.drop(6), name)
     } else if (in.startsWith("say")) location ! Room.SayMessage(in.drop(4), name)

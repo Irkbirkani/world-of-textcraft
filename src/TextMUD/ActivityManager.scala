@@ -12,7 +12,6 @@ class ActivityManager extends Actor {
       queue.enqueue(a)
     case CheckQueue =>
         ticks += 1
-        println(queue.isEmpty + " " + (if (!queue.isEmpty) queue.peek else " "))
         while (!queue.isEmpty && queue.peek.time == ticks) {
           val act = queue.dequeue()
           act.sender ! act.message
