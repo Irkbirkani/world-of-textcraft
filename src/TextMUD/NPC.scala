@@ -41,14 +41,16 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
           Main.activityManager ! ActivityManager.Enqueue(450, ResetChar)
           println("Sent Respawn")
           victim = None
-          c ! ResetVictim
+          sender ! ResetVictim
         } else if (victim.isEmpty) {
           victim = Some(sender)
           Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
         }
       }
     case DamageTaken(dmg, alive) =>
-      if (alive) {
+      if (victim.isEmpty) {
+        println("Damage with no victim for NPC.")
+      } else if (alive) {
         kill(victim.get.path.name)
       } else {
         victim = None
@@ -71,7 +73,7 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
 
   def d6 = util.Random.nextInt(6) + 1
 
-  def takeDamage(dmg: Double):Double = {
+  def takeDamage(dmg: Double): Double = {
     val damage = d6
     val actDmg = if (damage == 0) 0
     else if (damage >= 1 && damage <= 5) dmg

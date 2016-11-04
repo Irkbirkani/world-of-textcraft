@@ -73,7 +73,7 @@ class Player(
           location ! Room.HasDied(self, name)
           victim = None
           Main.activityManager ! ActivityManager.Enqueue(50, ResetChar)
-          c ! ResetVictim
+          sender ! ResetVictim
         } else if (victim.isEmpty) {
           victim = Some(sender)
           Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
@@ -82,7 +82,9 @@ class Player(
         sender ! PrintMessage("You are having a hard time finding them.")
       }
     case DamageTaken(dmg, alive) =>
-      if (alive) {
+      if (victim.isEmpty) {
+        println("Damage with no victim.")
+      } else if (alive) {
         output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "!")
         kill(victim.get.path.name)
       } else {

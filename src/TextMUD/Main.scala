@@ -29,7 +29,11 @@ object Main extends App {
       val out = new PrintStream(sock.getOutputStream)
       Future {
         out.println("What is your name? \nNo spaces. Letters only.")
-        val name = in.readLine()
+        var name = in.readLine()
+        if (checkName(name)) {
+          out.println("I said no spaces or numbers Zach!")
+          name = in.readLine()
+        }
         playerManager ! PlayerManager.NewPlayer(name, Player.playerHealth, "FirstRoom", new MutableDLList[Item](), in, out, sock)
       }
     }
@@ -37,4 +41,8 @@ object Main extends App {
   system.scheduler.schedule(0.seconds, 0.1.seconds, activityManager, ActivityManager.CheckQueue)
   system.scheduler.schedule(0.seconds, 0.1.seconds, playerManager, PlayerManager.CheckInput)
   checkConnections()
+
+  private def checkName(name: String): Boolean = {
+    name.contains(" ") || name.contains("1") || name.contains("2") || name.contains("3") || name.contains("4") || name.contains("5") || name.contains("6") || name.contains("7") || name.contains("8") || name.contains("9") || name.contains("0")
+  }
 }
