@@ -39,13 +39,16 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
         val realDamage = takeDamage(dmg)
         sender ! DamageTaken(realDamage, Alive)
         println("Sent Damage Taken "+ realDamage)
-        if (victim.isEmpty) {
+        if (!Alive) {
+        	location ! Room.HasDied(self, name)
+        	Main.activityManager ! ActivityManager.Enqueue(300, Respawn)
+        	println("Sent Respwan")
+        	victim = None
+        	c ! ResetVictim
+        }
+        else if (victim.isEmpty) {
           victim = Some(sender)
           Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
-        }
-        if (!Alive) {
-          location ! Room.HasDied(self, name)
-          Main.activityManager ! ActivityManager.Enqueue(300, Respawn)
         }
       }
     case DamageTaken(dmg, alive) =>
@@ -55,9 +58,11 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
       } else {
         victim = None
       }
+    case ResetVictim =>
+      victim = None
     case Respawn =>
       println("received Respawn")
-      location ! Room.EnterRoom(self, name)
+      Main.npcManager ! NPCManager.NewNPC(name,health, location.path.name, attack, armor, speed)
   }
 
   def kill(pl: String): Unit = {

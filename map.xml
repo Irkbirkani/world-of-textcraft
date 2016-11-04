@@ -28,7 +28,7 @@ Exits to the north, south, or west.</description>
 		<description>The Fifth Room. 
 Exits to the north, south, or west.
 		</description>
-		<item name="shield" damage="0" speed="0" armor="10" itype="offHand">It's broken</item>
+		<item name="shield" damage="0" speed="0" armor="10" itype="offHand">It's slightly broken</item>
 		<exits>ThirdRoom,NinthRoom,,SeventhRoom,,</exits>
 	</room>
 	<room name="Sixth Room" keyword="SixthRoom">

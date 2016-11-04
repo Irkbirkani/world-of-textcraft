@@ -56,7 +56,7 @@ class Player(
           output.println("You can't go that way")
       }
     case KillCmnd(c) =>
-      println(c)
+      println(name + " is hitting " + c.path.name)
       victim = Some(c)
       output.println("You are hitting " + c.path.name)
       Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
@@ -69,9 +69,13 @@ class Player(
         val realDamage = takeDamage(dmg)
         sender ! DamageTaken(realDamage, isAlive)
         output.println(c.path.name + " dealt " + dmg + " damage!")
-        if (isAlive == false) {
+        if (!isAlive) {
+          println(name + " Send Damage isAlive " + isAlive)
+          Main.activityManager ! ActivityManager.Enqueue(20, Respawn)
+          clearInventory
           location ! Room.HasDied(self, name)
-          Main.activityManager ! ActivityManager.Enqueue(10, Respawn)
+          victim = None
+          c ! ResetVictim
         } else if (victim.isEmpty) {
           victim = Some(sender)
           Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
@@ -80,7 +84,8 @@ class Player(
         sender ! PrintMessage("You are having a hard time finding them.")
       }
     case DamageTaken(dmg, alive) =>
-      if (alive == true) {
+      println(name + " Damage taken alive " + alive)
+      if (alive) {
         output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "!")
         kill(victim.get.path.name)
       } else {
@@ -88,6 +93,10 @@ class Player(
         victim = None
       }
     case Respawn =>
+      Main.playerManager ! PlayerManager.NewPlayer(name, Player.playerHealth, "FirstRoom", new MutableDLList[Item](), input, output, sock)
+      isAlive = true
+    case ResetVictim =>
+      victim = None
 
   }
 
@@ -123,6 +132,15 @@ class Player(
       output.println("You have: ")
       for (i <- 0 until inventory.length) yield output.println(inventory(i).name)
     }
+  }
+
+  def clearInventory: Unit = {
+    _inventory.map(i => getFromInventory(i.name) match {
+      case Some(item) =>
+        location ! Room.DropItem(name, item)
+        location ! Room.SayMessage("dropped " + item.name + ".", name)
+      case None =>
+    })
   }
 
   //Equipment management
@@ -230,7 +248,10 @@ class Player(
     else if (damage >= 1 && damage <= 5) dmg
     else dmg * 2
     _health -= actDmg
-    if (health <= 0) isAlive = false
+    if (_health <= 0) {
+      isAlive = false
+      println("is Alive for " + name + " changed to false")
+    }
     actDmg - (armor * armorReduc)
   }
 
@@ -264,7 +285,6 @@ class Player(
         location ! Room.SayMessage("dropped " + item.name + ".", name)
       case None =>
         PrintMessage("You can't drop what you dont have.")
-        None
     }
     //player equipment
     else if (in.startsWith("equip")) equip(in.drop(6))

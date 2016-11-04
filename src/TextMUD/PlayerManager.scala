@@ -32,6 +32,8 @@ class PlayerManager extends Actor {
         found = true
       }
       if (!found) sender ! Player.PrintMessage(s"Player $to does not exist.")
+    case RemovePlayer(pl) =>
+      context.children.filter(_ != pl)
   }
 }
 
@@ -39,6 +41,7 @@ object PlayerManager {
   //Player Management
   case object CheckInput
   case class NewPlayer(name: String, health:Double,location: String, inventory: MutableDLList[Item], input: BufferedReader, output: PrintStream, sock: Socket)
+  case class RemovePlayer(pl:ActorRef)
   
   //Messaging Management
   case class PrintShoutMessage(msg: String, name: String)

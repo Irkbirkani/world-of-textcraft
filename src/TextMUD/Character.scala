@@ -11,5 +11,6 @@ object Character {
   case object AttackNow
   case class SendDamage(loc: ActorRef, dmg: Double, c: ActorRef)
   case class DamageTaken(dmg: Double, alive: Boolean)
+  case object ResetVictim
 
 }
