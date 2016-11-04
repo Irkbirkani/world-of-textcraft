@@ -2,12 +2,14 @@
 	<room name="First Room" keyword="FirstRoom">
 		<description>You are in the first Room.
 Exit to the east.
+=================
 		</description>
 		<exits>,,SecondRoom,,,</exits>
 	</room>
 	<room name="Second Room" keyword="SecondRoom">
 		<description>You are in the second Room.
-Exits to the south, east, or west.
+Exits to the south, east, or west
+=================================
 		</description>
 		<item name="sword" damage="5" speed="10" armor="0" itype="hand">It Looks
 			Sharp</item>
@@ -18,6 +20,7 @@ Exits to the south, east, or west.
 	<room name="Third Room" keyword="ThirdRoom">
 		<description>You are in the Third Room.
 Exits to the south or east.
+===========================
 		</description>
 		<npcs name="Muffin" health="1000" location="ThirdRoom" attack="50" armor="50"
 			speed="30"></npcs>
@@ -26,6 +29,7 @@ Exits to the south or east.
 	<room name="Fourth Room" keyword="FourthRoom">
 		<description>You enter room number Four.
 Exits to the north, south, or west.
+===================================
 		</description>
 		<item name="your bank balance" damage="0" speed="0" armor="0"
 			itype="misc">you wish it were as high as your GPA.</item>
@@ -34,6 +38,7 @@ Exits to the north, south, or west.
 	<room name="Fifth Room" keyword="FifthRoom">
 		<description>The Fifth Room.
 Exits to the north, south, or west.
+===================================
 		</description>
 		<item name="shield" damage="0" speed="0" armor="10" itype="offHand">It's
 			slightly broken</item>
@@ -42,12 +47,14 @@ Exits to the north, south, or west.
 	<room name="Sixth Room" keyword="SixthRoom">
 		<description>The Sixth Room.
 Exit to the east.
+=================
 		</description>
 		<exits>,,FourthRoom,,,</exits>
 	</room>
 	<room name="Seventh Room" keyword="SeventhRoom">
 		<description>The Crossroads of the rooms.
 Exits to the north, south, east, or west.
+=========================================
 		</description>
 		<item name="thing" damage="10" speed="35" armor="0" itype="twoHand">The
 			most amazing thing you ever did see</item>
@@ -55,13 +62,15 @@ Exits to the north, south, east, or west.
 	</room>
 	<room name="Eighth Room" keyword="EighthRoom">
 		<description>Room Numero Ocho.
-			Salida a east.
+Salida a east.
+==============
 		</description>
 		<exits>,,SeventhRoom,,,</exits>
 	</room>
 	<room name="Ninth Room" keyword="NinthRoom">
 		<description>The Second Highest room number.
 Exit north.
+===========
 		</description>
 		<item name="hat" damage="0" speed="0" armor="5" itype="head">its pretty
 			rad looking.</item>
@@ -74,6 +83,7 @@ Exit north.
 	<room name="Tenth Room" keyword="TenthRoom">
 		<description>The last Room.
 Exit north.
+===========
 		</description>
 		<exits>FifthRoom,,,,,</exits>
 	</room>

@@ -3,6 +3,7 @@ package TextMUD
 import akka.actor.Actor
 import akka.actor.actorRef2Scala
 import akka.actor.ActorRef
+import scala.Console._
 
 class Room(
     keyword: String,
@@ -42,7 +43,7 @@ class Room(
       removePlayer(pl)
     //Messages  
     case SayMessage(msg, name) =>
-      chars.foreach(p => p ! Player.PrintMessage(s"$name: $msg"))
+      chars.foreach(p => p ! Player.PrintMessage(s"${RESET}${MAGENTA}$name: $msg${RESET}"))
     case CheckInRoom(c) =>
       val ch = chars.filter(_.path.name == c)
       if (ch.length == 0) {
@@ -54,9 +55,10 @@ class Room(
 
   //Print Description
   def printDescription(): String = {
-    name + "\n" + description + "\n" +
-      "You see: \n" + (if (items.length == 0) "nothing" else (for (i <- 0 until items.length) yield (items(i).name)).mkString("\n")) +
-      "\nPlayers in room: \n" + chars.map(_.path.name).mkString("\n")
+    s"${RESET}${CYAN}$name\n$description${RESET}" +
+      s"${RESET}${GREEN}\nYou see: \n" +
+      {GREEN}+(if (items.length == 0) "nothing" else (for (i <- 0 until items.length) yield (items(i).name)).mkString("\n"))+"\n========" +{RESET} + 
+      {RESET}+{YELLOW}+"\nPlayers in room: \n" + chars.map(_.path.name).mkString("\n")+"\n========== "+{RESET}
   }
 
   //Room Exit Management

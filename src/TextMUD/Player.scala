@@ -7,6 +7,7 @@ import java.io.PrintStream
 import akka.actor.ActorRef
 import java.io.BufferedReader
 import java.net.Socket
+import scala.Console._
 
 class Player(
     val name: String,

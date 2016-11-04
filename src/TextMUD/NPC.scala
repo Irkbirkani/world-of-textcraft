@@ -31,7 +31,6 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
       Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
     case AttackNow =>
       victim.foreach(c => c ! SendDamage(location, attack, c))
-      println("Sent Send Damage")
     case SendDamage(loc, dmg, c) =>
       if (loc == location) {
         val realDamage = takeDamage(dmg)
@@ -41,6 +40,7 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
           Main.activityManager ! ActivityManager.Enqueue(450, ResetChar)
           println("Sent Respawn")
           victim = None
+          _location = null
           sender ! ResetVictim
         } else if (victim.isEmpty) {
           victim = Some(sender)
@@ -58,7 +58,9 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
     case ResetVictim =>
       victim = None
     case ResetChar =>
+      println(_health)
       _health = startHlth
+      println("health is now " + _health)
       victim = None
       Main.roomManager ! RoomManager.EnterRoom(startLoc, self)
   }
