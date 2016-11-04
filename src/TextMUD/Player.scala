@@ -56,7 +56,6 @@ class Player(
           output.println("You can't go that way")
       }
     case KillCmnd(c) =>
-      println(name + " is hitting " + c.path.name)
       victim = Some(c)
       output.println("You are hitting " + c.path.name)
       Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
@@ -70,11 +69,10 @@ class Player(
         sender ! DamageTaken(realDamage, isAlive)
         output.println(c.path.name + " dealt " + dmg + " damage!")
         if (!isAlive) {
-          println(name + " Send Damage isAlive " + isAlive)
-          Main.activityManager ! ActivityManager.Enqueue(20, Respawn)
           clearInventory
           location ! Room.HasDied(self, name)
           victim = None
+          Main.activityManager ! ActivityManager.Enqueue(50, ResetChar)
           c ! ResetVictim
         } else if (victim.isEmpty) {
           victim = Some(sender)
@@ -84,7 +82,6 @@ class Player(
         sender ! PrintMessage("You are having a hard time finding them.")
       }
     case DamageTaken(dmg, alive) =>
-      println(name + " Damage taken alive " + alive)
       if (alive) {
         output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "!")
         kill(victim.get.path.name)
@@ -92,9 +89,11 @@ class Player(
         output.println("you killed " + victim.get.path.name + ".")
         victim = None
       }
-    case Respawn =>
-      Main.playerManager ! PlayerManager.NewPlayer(name, Player.playerHealth, "FirstRoom", new MutableDLList[Item](), input, output, sock)
+    case ResetChar =>
+      _health = playerHealth
       isAlive = true
+      victim = None
+      Main.roomManager ! RoomManager.EnterRoom("FirstRoom", self)
     case ResetVictim =>
       victim = None
 
@@ -247,12 +246,12 @@ class Player(
     val actDmg = if (damage == 0) 0
     else if (damage >= 1 && damage <= 5) dmg
     else dmg * 2
-    _health -= actDmg
+    val totalDmg = actDmg - (armor * armorReduc)
+    _health -= totalDmg
     if (_health <= 0) {
       isAlive = false
-      println("is Alive for " + name + " changed to false")
     }
-    actDmg - (armor * armorReduc)
+    totalDmg
   }
 
   //Player Tell Messaging

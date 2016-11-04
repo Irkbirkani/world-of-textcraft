@@ -2,6 +2,7 @@ package TextMUD
 
 import akka.actor.Actor
 import akka.actor.ActorRef
+import java.util.function.ToDoubleBiFunction
 
 class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int, val speed: Int) extends Actor {
   def health = _health
@@ -26,33 +27,27 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
       this.move(util.Random.nextInt(6))
       Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
     case KillCmnd(c) =>
-      println("received kill cmnd for "+c.path.name)
       var victim = c
       Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
     case AttackNow =>
-      println("Received Attack Now")
       victim.foreach(c => c ! SendDamage(location, attack, c))
       println("Sent Send Damage")
     case SendDamage(loc, dmg, c) =>
-      println("Received Send Damage "+ dmg)
       if (loc == location) {
         val realDamage = takeDamage(dmg)
         sender ! DamageTaken(realDamage, Alive)
-        println("Sent Damage Taken "+ realDamage)
         if (!Alive) {
-        	location ! Room.HasDied(self, name)
-        	Main.activityManager ! ActivityManager.Enqueue(300, Respawn)
-        	println("Sent Respwan")
-        	victim = None
-        	c ! ResetVictim
-        }
-        else if (victim.isEmpty) {
+          location ! Room.HasDied(self, name)
+          Main.activityManager ! ActivityManager.Enqueue(450, ResetChar)
+          println("Sent Respawn")
+          victim = None
+          c ! ResetVictim
+        } else if (victim.isEmpty) {
           victim = Some(sender)
           Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
         }
       }
     case DamageTaken(dmg, alive) =>
-      println("Received Damage Taken")
       if (alive) {
         kill(victim.get.path.name)
       } else {
@@ -60,9 +55,10 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
       }
     case ResetVictim =>
       victim = None
-    case Respawn =>
-      println("received Respawn")
-      Main.npcManager ! NPCManager.NewNPC(name,health, location.path.name, attack, armor, speed)
+    case ResetChar =>
+      _health = startHlth
+      victim = None
+      Main.roomManager ! RoomManager.EnterRoom(startLoc, self)
   }
 
   def kill(pl: String): Unit = {
@@ -75,14 +71,15 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
 
   def d6 = util.Random.nextInt(6) + 1
 
-  def takeDamage(dmg: Double) = {
+  def takeDamage(dmg: Double):Double = {
     val damage = d6
     val actDmg = if (damage == 0) 0
     else if (damage >= 1 && damage <= 5) dmg
     else dmg * 2
-    _health = -actDmg
+    val totalDmg = actDmg - dmgReduction
+    _health -= totalDmg
     if (health <= 0) Alive = false
-    actDmg - dmgReduction
+    totalDmg
   }
 
   def move(direction: Int): Unit = {
@@ -94,15 +91,19 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
 }
 
 object NPC {
+  private var startLoc: String = ""
+  private var startHlth = 0.0
   def apply(n: xml.Node): Unit = {
     Main.npcManager ! NPCManager.NewNPC((n \ "@name").text,
-      n.text.toDouble,
+      (n \ "@health").text.toDouble,
       (n \ "@location").text,
       (n \ "@attack").text.toInt,
       (n \ "@armor").text.toInt,
       (n \ "@speed").text.toInt)
+    startLoc = (n \ "@location").text
+    startHlth = (n \ "@health").text.toDouble
   }
   case object RequestMove
-  val moveTime = 100
+  val moveTime = 150
 
 }

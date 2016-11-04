@@ -40,8 +40,6 @@ class Room(
     case HasDied(pl,name)=>
       chars.foreach(p => p ! Player.PrintMessage(name + " has died!"))
       removePlayer(pl)
-      Main.playerManager ! PlayerManager.RemovePlayer(pl)
-      Main.npcManager ! NPCManager.RemoveNPC(pl)
     //Messages  
     case SayMessage(msg, name) =>
       chars.foreach(p => p ! Player.PrintMessage(s"$name: $msg"))
