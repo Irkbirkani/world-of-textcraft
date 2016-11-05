@@ -24,7 +24,7 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
         case None =>
       }
     case RequestMove =>
-      this.move(util.Random.nextInt(6))
+      this.move(util.Random.nextInt(5))
       Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
     case KillCmnd(c) =>
       var victim = c
