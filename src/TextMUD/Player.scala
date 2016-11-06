@@ -129,10 +129,13 @@ class Player(
   }
 
   def printInventory(): Unit = {
-    if (emptyInventory == true) output.println("You have nothing in your bag.")
-    else {
-      output.println("You have: ")
-      for (i <- 0 until inventory.length) yield output.println(inventory(i).name)
+    val invSeq = inventory.toSeq
+    for (i <- invSeq) {
+      if (inventory.count(_ == i) == 1) {
+        output.println(i.name)
+      } else if (inventory.count(_ == i) > 1) {
+        output.println(i.name + "(" + (inventory.count(_ == i) + ")"))
+      } else output.println("You have nothing in your bag.")
     }
   }
 
