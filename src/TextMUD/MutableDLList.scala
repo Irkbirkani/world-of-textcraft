@@ -91,33 +91,33 @@ class MutableDLList[A] extends mutable.Buffer[A] {
   override def filter(pred: A => Boolean): MutableDLList[A] = {
     val ret = new MutableDLList[A]()
     var rover = end.next
-    while(rover!=end) {
+    while (rover != end) {
       if (pred(rover.data)) ret += rover.data
       rover = rover.next
     }
     ret
   }
-  
-  def myMap[B](f:A=>B): MutableDLList[B] = {
+
+  def myMap[B](f: A => B): MutableDLList[B] = {
     val ret = new MutableDLList[B]()
     var rover = end.next
-    while(rover != end) {
+    while (rover != end) {
       ret += f(rover.data)
       rover = rover.next
     }
     ret
   }
-  
-  def fill(size:Int)(a:A):MutableDLList[A] ={
+
+  def fill(size: Int)(a: A): MutableDLList[A] = {
     val ret = new MutableDLList[A]()
     var count = 0
     while (count < size) {
       ret += a
-      count +=1
+      count += 1
     }
     ret
   }
-  
+
   override def toString = mkString("MutableDLList(", ", ", ")")
 }
 

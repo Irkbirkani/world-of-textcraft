@@ -23,8 +23,7 @@ class RoomManager extends Actor {
 }
 
 object RoomManager {
-  //Puts player in a room
+  //Puts char in a room
   case class EnterRoom(loc: String, p: ActorRef)
-  //Puts NPC in room
-  case class NPCEnter(loc:String, npc:ActorRef)
+ 
 }

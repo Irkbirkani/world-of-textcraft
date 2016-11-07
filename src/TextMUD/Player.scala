@@ -108,7 +108,7 @@ class Player(
   def getFromInventory(itemName: String): Option[Item] = {
     inventory.find(_.name == itemName) match {
       case Some(item) => {
-        _inventory = _inventory.filter(_ != item)
+        _inventory = _inventory.filter(i => !(i eq item))
         Some(item)
       }
       case None =>
@@ -117,7 +117,7 @@ class Player(
   }
 
   def inspectItem(item: String): Unit = {
-    for (i <- 0 until inventory.length; if (inventory(i).name == item)) yield output.println(inventory(i).description)
+    for (i <- 0 until inventory.length; if (inventory(i).name == item))  output.println(inventory(i).description)
   }
 
   def addToInventory(item: Item): Unit = {
@@ -129,13 +129,20 @@ class Player(
   }
 
   def printInventory(): Unit = {
-    val invSeq = inventory.toSeq
-    for (i <- invSeq) {
-      if (inventory.count(_ == i) == 1) {
-        output.println(i.name)
-      } else if (inventory.count(_ == i) > 1) {
-        output.println(i.name + "(" + (inventory.count(_ == i) + ")"))
-      } else output.println("You have nothing in your bag.")
+    val invSet = inventory.toSet
+    invSet.foreach(i => println(i.name))
+    if (inventory.length == 0) {
+      output.println("You have nothing in your bag.")
+    } else {
+      for (i <- invSet) {
+        if (inventory.count(_ == i) == 1) {
+          output.println(i.name)
+          println(inventory.length)
+        } else if (inventory.count(_ == i) > 1) {
+          output.println(i.name + "(" + (inventory.count(_ == i) + ")"))
+          println(inventory.length)
+        }
+      }
     }
   }
 

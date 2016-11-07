@@ -24,8 +24,10 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
         case None =>
       }
     case RequestMove =>
-      this.move(util.Random.nextInt(5))
-      Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
+      if (location != null) {
+        this.move(util.Random.nextInt(5))
+        Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
+      }
     case KillCmnd(c) =>
       var victim = c
       Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
@@ -34,8 +36,8 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
     case SendDamage(loc, dmg, c) =>
       if (loc == location) {
         val realDamage = takeDamage(dmg)
-        sender ! DamageTaken(realDamage, Alive)
-        if (!Alive) {
+        sender ! DamageTaken(realDamage, isAlive)
+        if (!isAlive) {
           location ! Room.HasDied(self, name)
           Main.activityManager ! ActivityManager.Enqueue(450, ResetChar)
           println("Sent Respawn")
@@ -49,7 +51,7 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
       }
     case DamageTaken(dmg, alive) =>
       if (victim.isEmpty) {
-        println("Damage with no victim for NPC.")
+        println("Damage with no victim for NPC." + sender.path + " self " + self.path)
       } else if (alive) {
         kill(victim.get.path.name)
       } else {
@@ -58,9 +60,8 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
     case ResetVictim =>
       victim = None
     case ResetChar =>
-      println(_health)
       _health = startHlth
-      println("health is now " + _health)
+      isAlive = true
       victim = None
       Main.roomManager ! RoomManager.EnterRoom(startLoc, self)
   }
@@ -69,7 +70,7 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
     location ! Room.CheckInRoom(pl)
   }
 
-  var Alive = true
+  var isAlive = true
 
   def dmgReduction = armor * armorReduc
 
@@ -82,7 +83,7 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
     else dmg * 2
     val totalDmg = actDmg - dmgReduction
     _health -= totalDmg
-    if (health <= 0) Alive = false
+    if (health <= 0) isAlive = false
     totalDmg
   }
 
