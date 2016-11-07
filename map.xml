@@ -62,7 +62,7 @@ Exit to the east.
 Exits to the north, south, east, or west.
 =========================================
 		</description>
-		<item name="thing" damage="10" speed="35" armor="0" itype="twoHand">The
+		<item name="thing" damage="15" speed="35" armor="0" itype="twoHand">The
 			most amazing thing you ever did see
 		</item>
 		<exits>FourthRoom,NinthRoom,FifthRoom,EighthRoom,,</exits>

@@ -58,23 +58,28 @@ class Player(
       }
     case KillCmnd(c) =>
       victim = Some(c)
-      output.println("You are hitting " + c.path.name)
-      Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
+      if (victim.get == self) {
+        output.println("You cannot kill yourself.")
+        victim = None
+      } else {
+        output.println("You are hitting " + c.path.name)
+        Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
+      }
     case AttackNow =>
-      if (victim.get != self) {
+      if (isAlive) {
         victim.foreach(c => c ! SendDamage(location, damage, c))
       }
     case SendDamage(loc, dmg, c) =>
       if (loc == location) {
         val realDamage = takeDamage(dmg)
         sender ! DamageTaken(realDamage, isAlive)
-        output.println(c.path.name + " dealt " + dmg + " damage!")
+        output.println(sender.path.name + " dealt " + dmg + " damage!")
         if (!isAlive) {
           clearInventory
           location ! Room.HasDied(self, name)
+          sender ! ResetVictim
           victim = None
           Main.activityManager ! ActivityManager.Enqueue(50, ResetChar)
-          sender ! ResetVictim
         } else if (victim.isEmpty) {
           victim = Some(sender)
           Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
@@ -83,12 +88,13 @@ class Player(
         sender ! PrintMessage("You are having a hard time finding them.")
       }
     case DamageTaken(dmg, alive) =>
-      if (victim.isEmpty) {
-        println("Damage with no victim.")
-      } else if (alive) {
+      //      if (victim.isEmpty) {
+      //        println("Damage taken with no victim for "+name)
+      //      } else 
+      if (alive && victim.nonEmpty) {
         output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "!")
         kill(victim.get.path.name)
-      } else {
+      } else if (victim.nonEmpty) {
         output.println("you killed " + victim.get.path.name + ".")
         victim = None
       }
@@ -117,7 +123,7 @@ class Player(
   }
 
   def inspectItem(item: String): Unit = {
-    for (i <- 0 until inventory.length; if (inventory(i).name == item))  output.println(inventory(i).description)
+    for (i <- 0 until inventory.length; if (inventory(i).name == item)) output.println(inventory(i).description)
   }
 
   def addToInventory(item: Item): Unit = {
