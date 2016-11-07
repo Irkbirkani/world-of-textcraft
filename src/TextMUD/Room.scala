@@ -22,7 +22,8 @@ class Room(
     case GetExit(dir) =>
       sender ! TakeExit(getExit(dir))
     case LinkRooms(rooms) =>
-      actorExits = exits.map(s => if (s.isEmpty) None else Some(rooms(s)))
+      actorExits = exits.map(e => if (e.isEmpty) None else Some(rooms(e)))
+      sender ! RoomManager.LinkingRooms(name,exits)
     //Item Management
     case GetItem(name, itemName) =>
       sender ! Player.AddToInventory(getItem(itemName))
