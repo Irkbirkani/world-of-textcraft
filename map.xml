@@ -1,12 +1,12 @@
 <rooms>
-	<room name="First Room" keyword="FirstRoom">
+	<room name="FirstRoom" keyword="FirstRoom">
 		<description>You are in the first Room.
 Exit to the east.
 =================
 		</description>
 		<exits>,,SecondRoom,,,</exits>
 	</room>
-	<room name="Second Room" keyword="SecondRoom">
+	<room name="SecondRoom" keyword="SecondRoom">
 		<description>You are in the second Room.
 Exits to the south, east, or west
 =================================
@@ -19,7 +19,7 @@ Exits to the south, east, or west
 		</item>
 		<exits>,FourthRoom,ThirdRoom,FirstRoom,,</exits>
 	</room>
-	<room name="Third Room" keyword="ThirdRoom">
+	<room name="ThirdRoom" keyword="ThirdRoom">
 		<description>You are in the Third Room.
 Exits to the south or east.
 ===========================
@@ -28,7 +28,7 @@ Exits to the south or east.
 			armor="50" speed="30"></npcs>
 		<exits>,FifthRoom,SecondRoom,,,</exits>
 	</room>
-	<room name="Fourth Room" keyword="FourthRoom">
+	<room name="FourthRoom" keyword="FourthRoom">
 		<description>You enter room number Four.
 Exits to the north, south, or west.
 ===================================
@@ -37,7 +37,7 @@ Exits to the north, south, or west.
 			itype="misc">you wish it were as high as your GPA.</item>
 		<exits>SecondRoom,SeventhRoom,,SixthRoom,,</exits>
 	</room>
-	<room name="Fifth Room" keyword="FifthRoom">
+	<room name="FifthRoom" keyword="FifthRoom">
 		<description>The Fifth Room.
 Exits to the north, south, or west.
 ===================================
@@ -50,14 +50,14 @@ Exits to the north, south, or west.
 		</item>
 		<exits>ThirdRoom,NinthRoom,,SeventhRoom,,</exits>
 	</room>
-	<room name="Sixth Room" keyword="SixthRoom">
+	<room name="SixthRoom" keyword="SixthRoom">
 		<description>The Sixth Room.
 Exit to the east.
 =================
 		</description>
 		<exits>,,FourthRoom,,,</exits>
 	</room>
-	<room name="Seventh Room" keyword="SeventhRoom">
+	<room name="SeventhRoom" keyword="SeventhRoom">
 		<description>The Crossroads of the rooms.
 Exits to the north, south, east, or west.
 =========================================
@@ -67,14 +67,14 @@ Exits to the north, south, east, or west.
 		</item>
 		<exits>FourthRoom,NinthRoom,FifthRoom,EighthRoom,,</exits>
 	</room>
-	<room name="Eighth Room" keyword="EighthRoom">
+	<room name="EighthRoom" keyword="EighthRoom">
 		<description>Room Numero Ocho.
 Salida a east.
 ==============
 		</description>
 		<exits>,,SeventhRoom,,,</exits>
 	</room>
-	<room name="Ninth Room" keyword="NinthRoom">
+	<room name="NinthRoom" keyword="NinthRoom">
 		<description>The Second Highest room number.
 Exit north.
 ===========
@@ -89,7 +89,7 @@ Exit north.
 			armor="1" speed="10"></npcs>
 		<exits>SeventhRoom,,,,,,</exits>
 	</room>
-	<room name="Tenth Room" keyword="TenthRoom">
+	<room name="TenthRoom" keyword="TenthRoom">
 		<description>The last Room.
 Exit north.
 ===========

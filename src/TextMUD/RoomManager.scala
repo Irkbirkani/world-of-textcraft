@@ -11,26 +11,30 @@ class RoomManager extends Actor {
   def receive = {
     case EnterRoom(loc, p) =>
       p ! Character.TakeExit(Some(rooms(loc)))
-    case LinkingRooms(key,exits) =>
-      roomExits + (key -> exits)
+    case LinkingRooms(key, exits) =>
+      roomExits += (key -> exits)
+    case ShortPath(curr, dest) =>
+      val path = shortestPath(curr, dest, roomExits, List())
+      path.foreach(a => sender ! Player.PrintMessage(a))
   }
   val rooms = {
     (xml.XML.loadFile("map.xml") \ "room").map { n =>
-      val key =  (n \ "@keyword").text 
-     key -> context.actorOf(Props(Room(n)),key)
+      val key = (n \ "@keyword").text
+      key -> context.actorOf(Props(Room(n)), key)
     }.toMap
   }
-  val roomExits:Map[String,Array[String]] = Map()
+  private var roomExits: Map[String, List[String]] = Map()
   context.children.foreach(_ ! Room.LinkRooms(rooms))
 
-  def shortestPath(curr:String, dest:String, exitsMap:Map[String, Array[String]],visited:Array[String]):Array[String] = {
-    curr ++ visited
-    if (curr == dest) Array("Arrived") 
+  def shortestPath(curr: String, dest: String, exitsMap: Map[String, List[String]], visited: List[String]): List[String] = {
+    println(exitsMap)
+    val newVisited = curr :: visited
+    if (curr == dest) visited
     else {
-      val path = for (i <- exitsMap(curr); if(!visited.contains(i))) yield {
-        i ++ shortestPath(i,dest,exitsMap,visited)
+      val path = for (i <- exitsMap(curr); if (i.trim.isEmpty() && !newVisited.contains(i))) yield {
+        exitsMap(i) ++ shortestPath(i, dest, exitsMap, newVisited)
       }
-     path
+      path.minBy(_.length)
     }
   }
 }
@@ -38,6 +42,7 @@ class RoomManager extends Actor {
 object RoomManager {
   //Puts char in a room
   case class EnterRoom(loc: String, p: ActorRef)
-  case class LinkingRooms(key:String, exits:Array[String])
- 
+  case class LinkingRooms(key: String, exits: List[String])
+  case class ShortPath(curr: String, dest: String)
+
 }
