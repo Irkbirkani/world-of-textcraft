@@ -31,7 +31,7 @@ class RoomManager extends Actor {
     val newVisited = curr :: visited
     if (curr == dest) visited
     else {
-      val path = for (i <- exitsMap(curr); if (i.trim.isEmpty() && !newVisited.contains(i))) yield {
+      val path = for (i <- exitsMap(curr); if (i.trim.nonEmpty && !newVisited.contains(i))) yield {
         exitsMap(i) ++ shortestPath(i, dest, exitsMap, newVisited)
       }
       path.minBy(_.length)
