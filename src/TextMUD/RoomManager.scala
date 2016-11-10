@@ -14,8 +14,10 @@ class RoomManager extends Actor {
     case LinkingRooms(key, exits) =>
       roomExits += (key -> exits)
     case ShortPath(curr, dest) =>
+      roomExits.foreach(println)
       val path = shortestPath(curr, dest, roomExits, List())
-      path.foreach(a => sender ! Player.PrintMessage(a))
+      println(path)
+      path.foreach(a => if (a.nonEmpty) sender ! Player.PrintMessage(a))
   }
   val rooms = {
     (xml.XML.loadFile("map.xml") \ "room").map { n =>
@@ -25,16 +27,19 @@ class RoomManager extends Actor {
   }
   private var roomExits: Map[String, List[String]] = Map()
   context.children.foreach(_ ! Room.LinkRooms(rooms))
+  private val dirs = "north south east west up down".split(" ")
 
   def shortestPath(curr: String, dest: String, exitsMap: Map[String, List[String]], visited: List[String]): List[String] = {
-    println(exitsMap)
     val newVisited = curr :: visited
-    if (curr == dest) visited
+    if (curr == dest) newVisited.reverse
     else {
-      val path = for (i <- exitsMap(curr); if (i.trim.nonEmpty && !newVisited.contains(i))) yield {
-        exitsMap(i) ++ shortestPath(i, dest, exitsMap, newVisited)
+      val path = for ((i,d) <- exitsMap(curr) zip dirs; if (i.trim.nonEmpty && !newVisited.contains(i))) yield {
+        shortestPath(i, dest, exitsMap, d::newVisited)
       }
-      path.minBy(_.length)
+      path.filter(_.nonEmpty) match {
+        case Nil => Nil
+        case lst => lst.minBy(_.length)
+      }
     }
   }
 }

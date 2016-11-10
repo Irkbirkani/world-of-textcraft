@@ -21,12 +21,12 @@ Exits to the south, east, or west
 	</room>
 	<room name="ThirdRoom" keyword="ThirdRoom">
 		<description>You are in the Third Room.
-Exits to the south or east.
+Exits to the south or west.
 ===========================
 		</description>
 		<npcs name="Muffin" health="1000" location="ThirdRoom" attack="50"
 			armor="50" speed="30"></npcs>
-		<exits>,FifthRoom,SecondRoom,,,</exits>
+		<exits>,FifthRoom,,SecondRoom,,</exits>
 	</room>
 	<room name="FourthRoom" keyword="FourthRoom">
 		<description>You enter room number Four.
