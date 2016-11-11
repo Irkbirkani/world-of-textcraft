@@ -40,7 +40,6 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
         if (!isAlive) {
           location ! Room.HasDied(self, name)
           Main.activityManager ! ActivityManager.Enqueue(450, ResetChar)
-          println("Sent Respawn")
           sender ! ResetVictim
           victim = None
           _location = null
@@ -50,9 +49,6 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
         }
       }
     case DamageTaken(dmg, alive) =>
-//      if (victim.isEmpty) {
-//        println("Damage with no victim for NPC. sender " + sender.path + " self " + self.path)
-//      } else
         if (alive && victim.nonEmpty) {
         kill(victim.get.path.name)
       } else {

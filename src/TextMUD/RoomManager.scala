@@ -16,7 +16,6 @@ class RoomManager extends Actor {
     case ShortPath(curr, dest) =>
       roomExits.foreach(println)
       val path = shortestPath(curr, dest, roomExits, List())
-      println(path)
       path.foreach(a => if (a.nonEmpty) sender ! Player.PrintMessage(a))
   }
   val rooms = {
