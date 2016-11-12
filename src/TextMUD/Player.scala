@@ -237,6 +237,28 @@ class Player(
     }
   }
 
+  def eat(item: String): Unit = {
+    val food = getFromInventory(item)
+    if (health == playerHealth) {
+        output.println("Health at max.")
+        addToInventory(food.get)
+    } else {
+      food match {
+        case Some(fd) =>
+          fd.itype match {
+            case Item.food =>
+              _health += fd.food
+              output.println("You ate " + fd.name + ".")
+            case _ =>
+              output.println("you can't eat that.")
+              addToInventory(food.get)
+          }
+        case None =>
+          output.println("You cant eat what you don't have!")
+      }
+    }
+  }
+
   //Move Player
   private def move(direction: Int): Unit = {
     if (victim.isEmpty) {
@@ -250,8 +272,6 @@ class Player(
   def kill(pl: String): Unit = {
     location ! Room.CheckInRoom(pl)
   }
-
-  private var sum = 0
 
   def d6 = util.Random.nextInt(6) + 1
 
@@ -299,7 +319,8 @@ class Player(
         location ! Room.SayMessage("dropped " + item.name + ".", name)
       case None =>
         PrintMessage("You can't drop what you dont have.")
-    }
+    } 
+    else if (in.startsWith("eat")) eat(in.drop(4))
     //player equipment
     else if (in.startsWith("equip")) equip(in.drop(6))
     else if (in.startsWith("unequip")) unequip(in.drop(8))

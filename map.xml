@@ -11,10 +11,10 @@ Exit to the east.
 Exits to the south, east, or west
 =================================
 		</description>
-		<item name="sword" damage="5" speed="10" armor="0" itype="hand">It Looks
+		<item name="sword" damage="5" speed="10" armor="0" food ="0" itype="hand">It Looks
 			Sharp
 		</item>
-		<item name="torch" damage="0" speed="0" armor="0" itype="misc">It's not
+		<item name="torch" damage="0" speed="0" armor="0" food ="0" itype="misc">It's not
 			that bright
 		</item>
 		<exits>,FourthRoom,ThirdRoom,FirstRoom,,</exits>
@@ -33,8 +33,7 @@ Exits to the south or west.
 Exits to the north, south, or west.
 ===================================
 		</description>
-		<item name="your bank balance" damage="0" speed="0" armor="0"
-			itype="misc">you wish it were as high as your GPA.</item>
+		<item name="your bank balance" damage="0" speed="0" armor="0" food="0" itype="misc">you wish it were as high as your GPA.</item>
 		<exits>SecondRoom,SeventhRoom,,SixthRoom,,</exits>
 	</room>
 	<room name="FifthRoom" keyword="FifthRoom">
@@ -42,10 +41,10 @@ Exits to the north, south, or west.
 Exits to the north, south, or west.
 ===================================
 		</description>
-		<item name="sword" damage="5" speed="10" armor="0" itype="hand">It Looks
+		<item name="sword" damage="5" speed="10" armor="0" food ="0" itype="hand">It Looks
 			Sharp
 		</item>
-		<item name="shield" damage="0" speed="0" armor="10" itype="offHand">It's
+		<item name="shield" damage="0" speed="0" armor="10" food ="0" itype="offHand">It's
 			slightly broken
 		</item>
 		<exits>ThirdRoom,NinthRoom,,SeventhRoom,,</exits>
@@ -62,7 +61,7 @@ Exit to the east.
 Exits to the north, south, east, or west.
 =========================================
 		</description>
-		<item name="thing" damage="15" speed="35" armor="0" itype="twoHand">The
+		<item name="thing" damage="15" speed="35" armor="0" food ="0" itype="twoHand">The
 			most amazing thing you ever did see
 		</item>
 		<exits>FourthRoom,NinthRoom,FifthRoom,EighthRoom,,</exits>
@@ -79,14 +78,10 @@ Salida a east.
 Exit north.
 ===========
 		</description>
-		<item name="hat" damage="0" speed="0" armor="5" itype="head">its pretty
-			rad looking.
-		</item>
-		<item name="ball" damage="2" speed="1" armor="0" itype="offHand">it might
-			be a soccer ball?
-		</item>
-		<npcs name="bat" health="25" location="NinthRoom" attack="2"
-			armor="1" speed="10"></npcs>
+		<item name="hat" damage="0" speed="0" armor="5" food ="0" itype="head">its pretty rad looking.</item>
+		<item name="ball" damage="2" speed="1" armor="0" food ="0" itype="offHand">it might be a soccer ball?</item>
+		<item name="apple" damage="0" speed="0" armor="0" food="5" itype="food">A delicious looking apple</item>
+		<npcs name="bat" health="25" location="NinthRoom" attack="2" armor="1" speed="10"></npcs>
 		<exits>SeventhRoom,,,,,,</exits>
 	</room>
 	<room name="TenthRoom" keyword="TenthRoom">
