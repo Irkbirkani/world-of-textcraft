@@ -10,7 +10,7 @@ class Room(
     val name: String,
     val description: String,
     private var _items: MutableDLList[Item],
-    private val exits: Array[String]) extends Actor {
+    private val exits: List[String]) extends Actor {
 
   import Room._
   import Character._
@@ -23,7 +23,7 @@ class Room(
       sender ! TakeExit(getExit(dir))
     case LinkRooms(rooms) =>
       actorExits = exits.map(e => if (e.isEmpty) None else Some(rooms(e)))
-      sender ! RoomManager.LinkingRooms(name,exits)
+      sender ! RoomManager.LinkingRooms(name, exits)
     //Item Management
     case GetItem(name, itemName) =>
       sender ! Player.AddToInventory(getItem(itemName))
@@ -39,7 +39,7 @@ class Room(
     case LeaveGame(pl, name) =>
       chars.foreach(p => p ! Player.PrintMessage(name + " left the game."))
       removePlayer(pl)
-    case HasDied(pl,name)=>
+    case HasDied(pl, name) =>
       chars.foreach(p => p ! Player.PrintMessage(name + " has died!"))
       removePlayer(pl)
     //Messages  
@@ -58,8 +58,8 @@ class Room(
   def printDescription(): String = {
     s"${RESET}${CYAN}$name\n$description${RESET}" +
       s"${RESET}${GREEN}\nYou see: \n" +
-      {GREEN}+(if (items.length == 0) "nothing" else (for (i <- 0 until items.length) yield (items(i).name)).mkString("\n"))+"\n========" +{RESET} + 
-      {RESET}+{YELLOW}+"\nPlayers in room: \n" + chars.map(_.path.name).mkString("\n")+"\n========== "+{RESET}
+      { GREEN } + (if (items.length == 0) "nothing" else (for (i <- 0 until items.length) yield (items(i).name)).mkString("\n")) + "\n========" + { RESET } +
+      { RESET } + { YELLOW } + "\nPlayers in room: \n" + chars.map(_.path.name).mkString("\n") + "\n========== " + { RESET }
   }
 
   //Room Exit Management
@@ -67,7 +67,7 @@ class Room(
     actorExits(dir)
   }
 
-  private var actorExits: Array[Option[ActorRef]] = Array.fill(6)(None)
+  private var actorExits: List[Option[ActorRef]] = List.fill(6)(None)
 
   //Room Player Management
   private var _chars: List[ActorRef] = List()
@@ -123,7 +123,7 @@ object Room {
     (n \ "npcs").map { npc => NPC(npc) }
     val item = new MutableDLList[Item]()
     (n \ "item").map { inode => Item(inode) }.toList.foreach(_ +=: item)
-    val exits = (n \ "exits").text.split(",").padTo(6, "")
+    val exits = (n \ "exits").text.split(",").padTo(6, "").toList
     new Room(keyword, name, description, item, exits)
   }
 }

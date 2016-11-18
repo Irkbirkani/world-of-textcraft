@@ -13,8 +13,12 @@ class RoomManager extends Actor {
       p ! Character.TakeExit(Some(rooms(loc)))
     case LinkingRooms(key, exits) =>
       roomExits + (key -> exits)
-    case ShortestPath(curr, dest) =>
-      shortestPath(curr, dest, roomExits, Array()).foreach { p => sender ! Player.PrintMessage(p) }
+      roomExits += (key -> exits)
+    case ShortPath(curr, dest) =>
+      roomExits.foreach(println)
+      val path = shortestPath(curr, dest, roomExits, List())
+      println(path)
+      path.foreach(a => if (a.nonEmpty) sender ! Player.PrintMessage(a))
   }
   val rooms = {
     (xml.XML.loadFile("map.xml") \ "room").map { n =>
@@ -22,17 +26,22 @@ class RoomManager extends Actor {
       key -> context.actorOf(Props(Room(n)), key)
     }.toMap
   }
-  val roomExits: Map[String, Array[String]] = Map()
-  context.children.foreach(_ ! Room.LinkRooms(rooms))
 
-  def shortestPath(curr: String, dest: String, exitsMap: Map[String, Array[String]], visited: Array[String]): Array[String] = {
-    curr ++ visited
-    if (curr == dest) visited
+  private var roomExits: Map[String, List[String]] = Map()
+  context.children.foreach(_ ! Room.LinkRooms(rooms))
+  private val dirs = "north south east west up down".split(" ")
+
+  def shortestPath(curr: String, dest: String, exitsMap: Map[String, List[String]], visited: List[String]): List[String] = {
+    val newVisited = curr :: visited
+    if (curr == dest) newVisited.reverse
     else {
-      for (i <- exitsMap(curr); if (!visited.contains(i))) yield {
-        i ++ (shortestPath(i, dest, exitsMap, visited))
+      val path = for ((i, d) <- exitsMap(curr) zip dirs; if (i.trim.nonEmpty && !newVisited.contains(i))) yield {
+        shortestPath(i, dest, exitsMap, d :: newVisited)
       }
-      visited
+      path.filter(_.nonEmpty) match {
+        case Nil => Nil
+        case lst => lst.minBy(_.length)
+      }
     }
   }
 }
@@ -40,7 +49,8 @@ class RoomManager extends Actor {
 object RoomManager {
   //Puts char in a room
   case class EnterRoom(loc: String, p: ActorRef)
-  case class LinkingRooms(key: String, exits: Array[String])
-  case class ShortestPath(curr: String, dest: String)
+
+  case class LinkingRooms(key: String, exits: List[String])
+  case class ShortPath(curr: String, dest: String)
 
 }

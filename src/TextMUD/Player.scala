@@ -274,7 +274,7 @@ class Player(
   }
   
   def shortPath(room:String) = {
-    Main.roomManager ! RoomManager.ShortestPath(location.path.name,room)
+    Main.roomManager ! RoomManager.ShortPath(location.path.name,room)
   }
 
   //Player Tell Messaging
@@ -297,6 +297,7 @@ class Player(
     else if ("up".startsWith(in)) move(4)
     else if ("down".startsWith(in)) move(5)
     else if ("look".startsWith(in)) location ! Room.PrintDescription
+    else if (in.startsWith("shortPath")) Main.roomManager ! RoomManager.ShortPath(location.path.name, in.drop(10))
     //player inventory
     else if (in.length > 0 && "inventory".startsWith(in)) printInventory
     else if (in.startsWith("inspect")) inspectItem(in.trim.drop(8))
