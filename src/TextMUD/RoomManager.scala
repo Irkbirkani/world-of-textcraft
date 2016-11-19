@@ -14,15 +14,18 @@ class RoomManager extends Actor {
     case LinkingRooms(key, exits) =>
       roomExits += (key -> exits)
     case ShortPath(curr, dest) =>
-      roomExits.foreach(println)
       val path = shortestPath(curr, dest, roomExits, List())
       path.foreach(a => if (a.nonEmpty) sender ! Player.PrintMessage(a))
   }
-  val rooms = {
-    (xml.XML.loadFile("map.xml") \ "room").map { n =>
-      val key = (n \ "@keyword").text
-      key -> context.actorOf(Props(Room(n)), key)
-    }.toMap
+  private def comp(s1:String, s2:String): Int = {
+    if (s1==s2) 0
+    else if (s1 >s2) 1
+    else -1
+  }
+  val rooms = new BSTMap[String,ActorRef](comp)
+  (xml.XML.loadFile("map.xml") \ "room").map { n =>
+    val key = (n \ "@keyword").text
+    rooms += key -> context.actorOf(Props(Room(n)), key)
   }
   private var roomExits: Map[String, List[String]] = Map()
   context.children.foreach(_ ! Room.LinkRooms(rooms))
@@ -32,8 +35,8 @@ class RoomManager extends Actor {
     val newVisited = curr :: visited
     if (curr == dest) newVisited.reverse
     else {
-      val path = for ((i,d) <- exitsMap(curr) zip dirs; if (i.trim.nonEmpty && !newVisited.contains(i))) yield {
-        shortestPath(i, dest, exitsMap, d::newVisited)
+      val path = for ((i, d) <- exitsMap(curr) zip dirs; if (i.trim.nonEmpty && !newVisited.contains(i))) yield {
+        shortestPath(i, dest, exitsMap, d :: newVisited)
       }
       path.filter(_.nonEmpty) match {
         case Nil => Nil

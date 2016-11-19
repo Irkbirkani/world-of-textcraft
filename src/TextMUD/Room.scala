@@ -105,7 +105,7 @@ object Room {
   case class DropItem(name: String, item: Item)
   //Exit Management
   case class GetExit(dir: Int)
-  case class LinkRooms(rooms: Map[String, ActorRef])
+  case class LinkRooms(rooms: BSTMap[String, ActorRef])
   //Room Character Management
   case class LeaveRoom(p: ActorRef, name: String)
   case class EnterRoom(p: ActorRef, name: String)
