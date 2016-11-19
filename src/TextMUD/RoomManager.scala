@@ -12,6 +12,7 @@ class RoomManager extends Actor {
     case EnterRoom(loc, p) =>
       p ! Character.TakeExit(Some(rooms(loc)))
     case LinkingRooms(key, exits) =>
+      roomExits + (key -> exits)
       roomExits += (key -> exits)
     case ShortPath(curr, dest) =>
       val path = shortestPath(curr, dest, roomExits, List())
@@ -27,6 +28,7 @@ class RoomManager extends Actor {
     val key = (n \ "@keyword").text
     rooms += key -> context.actorOf(Props(Room(n)), key)
   }
+
   private var roomExits: Map[String, List[String]] = Map()
   context.children.foreach(_ ! Room.LinkRooms(rooms))
   private val dirs = "north south east west up down".split(" ")
@@ -49,6 +51,7 @@ class RoomManager extends Actor {
 object RoomManager {
   //Puts char in a room
   case class EnterRoom(loc: String, p: ActorRef)
+
   case class LinkingRooms(key: String, exits: List[String])
   case class ShortPath(curr: String, dest: String)
 

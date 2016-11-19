@@ -287,6 +287,10 @@ class Player(
     }
     totalDmg
   }
+  
+  def shortPath(room:String) = {
+    Main.roomManager ! RoomManager.ShortPath(location.path.name,room)
+  }
 
   //Player Tell Messaging
   def tellMessage(s: String): Unit = {
@@ -334,6 +338,7 @@ class Player(
       Main.playerManager ! PlayerManager.PrintShoutMessage(in.drop(6), name)
     } else if (in.startsWith("say")) location ! Room.SayMessage(in.drop(4), name)
     else if (in.startsWith("tell")) tellMessage(in)
+    else if (in.startsWith("goto")) shortPath(in.drop(5))
     //help command
     else if ("help".startsWith(in)) {
       val source = Source.fromFile("help.txt")
