@@ -72,8 +72,8 @@ class Player(
     case SendDamage(loc, dmg, c) =>
       if (loc == location) {
         val realDamage = takeDamage(dmg)
-        sender ! DamageTaken(realDamage, isAlive)
-        output.println(sender.path.name + " dealt " + dmg + " damage! Health is at "+ health)
+        sender ! DamageTaken(realDamage, isAlive, health.toInt)
+        output.println(sender.path.name + " dealt " + realDamage + " damage! Health is at " + health)
         if (!isAlive) {
           clearInventory
           location ! Room.HasDied(self, name)
@@ -87,9 +87,9 @@ class Player(
       } else {
         sender ! PrintMessage("You are having a hard time finding them.")
       }
-    case DamageTaken(dmg, alive) =>
+    case DamageTaken(dmg, alive, hp) =>
       if (alive && victim.nonEmpty) {
-        output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "!")
+        output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "! " + victim.get.path.name + " has " + hp + " health left!")
         kill(victim.get.path.name)
       } else if (victim.nonEmpty) {
         output.println("you killed " + victim.get.path.name + ".")
@@ -139,9 +139,9 @@ class Player(
       for (i <- invSet) {
         if (inventory.count(_ == i) == 1) {
           output.println(i.name)
-          println(inventory.length)
         } else if (inventory.count(_ == i) > 1) {
-          output.println(i.name + "(" + (inventory.count(_ == i) + ")"))
+          val numItem = inventory.count(_ == i) 
+          output.println(i.name + "(x" + numItem + ")")
         }
       }
     }
@@ -240,15 +240,15 @@ class Player(
   def eat(item: String): Unit = {
     val food = getFromInventory(item)
     if (health == playerHealth) {
-        output.println("Health at max.")
-        addToInventory(food.get)
+      output.println("Health at max.")
+      addToInventory(food.get)
     } else {
       food match {
         case Some(fd) =>
           fd.itype match {
             case Item.food =>
               _health += fd.food
-              output.println("You ate " + fd.name + ".")
+              output.println("You ate " + fd.name + ". Health is " + health.toInt)
             case _ =>
               output.println("you can't eat that.")
               addToInventory(food.get)
@@ -287,9 +287,9 @@ class Player(
     }
     totalDmg
   }
-  
-  def shortPath(room:String) = {
-    Main.roomManager ! RoomManager.ShortPath(location.path.name,room)
+
+  def shortPath(room: String) = {
+    Main.roomManager ! RoomManager.ShortPath(location.path.name, room)
   }
 
   //Player Tell Messaging
@@ -323,7 +323,7 @@ class Player(
         location ! Room.SayMessage("dropped " + item.name + ".", name)
       case None =>
         PrintMessage("You can't drop what you dont have.")
-    } 
+    }
     else if (in.startsWith("eat")) eat(in.drop(4))
     //player equipment
     else if (in.startsWith("equip")) equip(in.drop(6))

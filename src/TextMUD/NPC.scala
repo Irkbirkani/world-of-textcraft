@@ -36,7 +36,7 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
     case SendDamage(loc, dmg, c) =>
       if (loc == location) {
         val realDamage = takeDamage(dmg)
-        sender ! DamageTaken(realDamage, isAlive)
+        sender ! DamageTaken(realDamage, isAlive, health.toInt)
         if (!isAlive) {
           location ! Room.HasDied(self, name)
           Main.activityManager ! ActivityManager.Enqueue(450, ResetChar)
@@ -48,7 +48,7 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
           Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
         }
       }
-    case DamageTaken(dmg, alive) =>
+    case DamageTaken(dmg, alive, hp) =>
         if (alive && victim.nonEmpty) {
         kill(victim.get.path.name)
       } else {
@@ -56,6 +56,7 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
       }
     case ResetVictim =>
       victim = None
+      _health = startHlth
     case ResetChar =>
       _health = startHlth
       isAlive = true
