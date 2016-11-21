@@ -24,8 +24,8 @@ Exits to the south, east, or west
 Exits to the south or west.
 ===========================
 		</description>
-		<npcs name="Muffin" health="1000" location="ThirdRoom" attack="50"
-			armor="50" speed="30"></npcs>
+		<npcs name="Muffin" health="1000" location="ThirdRoom" attack="50" armor="50" speed="30">
+			<item name="Sword of Power" damage="500" speed="3" armor="0" food="0" itype="twoHand">The most powerful weapon in the game!</item></npcs>
 		<exits>,FifthRoom,,SecondRoom,,</exits>
 	</room>
 	<room name="FourthRoom" keyword="FourthRoom">
@@ -80,8 +80,9 @@ Exit north.
 		</description>
 		<item name="hat" damage="0" speed="0" armor="5" food ="0" itype="head">its pretty rad looking.</item>
 		<item name="ball" damage="2" speed="1" armor="0" food ="0" itype="offHand">it might be a soccer ball?</item>
-		<item name="apple" damage="0" speed="0" armor="0" food="5" itype="food">A delicious looking apple</item>
-		<npcs name="bat" health="25" location="NinthRoom" attack="2" armor="1" speed="10"></npcs>
+		<item name="apple" damage="0" speed="0" armor="0" food="5" itype="food">A delicious looking apple. Restores 5 health.</item>
+		<npcs name="bat" health="25" location="NinthRoom" attack="2" armor="1" speed="10" >
+		     <item name="bat meat" damage="0" speed="0" armor="0" food="5" itype="food">Stringy and chewy, but restores 5 health.</item></npcs>
 		<exits>SeventhRoom,,,,,,</exits>
 	</room>
 	<room name="TenthRoom" keyword="TenthRoom">

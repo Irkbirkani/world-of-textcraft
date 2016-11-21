@@ -332,7 +332,10 @@ class Player(
     //combat commands
     else if (in.startsWith("kill")) kill(in.drop(5))
     else if ("health".startsWith(in)) output.println("Health at: " + health)
-    else if ("flee".startsWith(in) && victim.nonEmpty) location ! Room.GetExit(util.Random.nextInt(5))
+    else if ("flee".startsWith(in) && victim.nonEmpty) {
+      victim = None
+      location ! Room.GetExit(util.Random.nextInt(5))
+    }
     //player messaging
     else if (in.startsWith("shout")) {
       Main.playerManager ! PlayerManager.PrintShoutMessage(in.drop(6), name)

@@ -4,7 +4,7 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 import java.util.function.ToDoubleBiFunction
 
-class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int, val speed: Int) extends Actor {
+class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int, val speed: Int, private var items: List[Item]) extends Actor {
   def health = _health
   import NPC._
   import Character._
@@ -42,6 +42,7 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
           Main.activityManager ! ActivityManager.Enqueue(450, ResetChar)
           sender ! ResetVictim
           victim = None
+          dropItems
           _location = null
         } else if (victim.isEmpty) {
           victim = Some(sender)
@@ -49,7 +50,7 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
         }
       }
     case DamageTaken(dmg, alive, hp) =>
-        if (alive && victim.nonEmpty) {
+      if (alive && victim.nonEmpty) {
         kill(victim.get.path.name)
       } else {
         victim = None
@@ -90,7 +91,26 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
       location ! Room.GetExit(direction)
     }
   }
-
+  def dropItems = {
+    def getItems(itemName: String): Option[Item] = {
+      this.items.find(_.name == itemName) match {
+        case Some(item) => {
+          items = items.filter(i => !(i eq item))
+          Some(item)
+        }
+        case None =>
+          None
+      }
+    }
+    items.map { itm =>
+      getItems(itm.name) match {
+        case Some(itm) =>
+          location ! Room.DropItem(name, itm)
+          location ! Room.SayMessage("dropped " + itm.name + ".", name)
+        case None =>
+      }
+    }
+  }
 }
 
 object NPC {
@@ -102,7 +122,8 @@ object NPC {
       (n \ "@location").text,
       (n \ "@attack").text.toInt,
       (n \ "@armor").text.toInt,
-      (n \ "@speed").text.toInt)
+      (n \ "@speed").text.toInt,
+      (n \ "item").map(iNode => Item(iNode)).toList)
     startLoc = (n \ "@location").text
     startHlth = (n \ "@health").text.toDouble
   }
