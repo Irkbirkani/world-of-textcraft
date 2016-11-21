@@ -73,7 +73,7 @@ class Player(
       if (loc == location) {
         val realDamage = takeDamage(dmg)
         sender ! DamageTaken(realDamage, isAlive)
-        output.println(sender.path.name + " dealt " + dmg + " damage!")
+        output.println(sender.path.name + " dealt " + dmg + " damage! Health is at "+ health)
         if (!isAlive) {
           clearInventory
           location ! Room.HasDied(self, name)
