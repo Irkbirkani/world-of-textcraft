@@ -42,6 +42,6 @@ object Main extends App {
   checkConnections()
 
   private def checkName(name: String): Boolean = {
-    name.contains('ï¿½')
+    name.contains('ï')
   }
 }

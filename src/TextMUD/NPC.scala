@@ -4,15 +4,15 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 import java.util.function.ToDoubleBiFunction
 
-class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int, val speed: Int, private var items: List[Item]) extends Actor {
+class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int, val speed: Int, private var items: List[Item], val desc: String) extends Actor {
   def health = _health
   import NPC._
   import Character._
   private var _location: ActorRef = null
   def location = _location
-  
+
   Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
-  
+
   private var startLoc = ""
   val startHlth = _health
   val startItems = items
@@ -28,9 +28,6 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
         case None =>
       }
     case RequestMove =>
-      println(name + " " + startLoc)
-      println(name + " " + startHlth)
-      println(name + " " + startItems)
       if (location != null) {
         this.move(util.Random.nextInt(5))
         Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
@@ -74,7 +71,8 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
     case View(name) =>
       name ! Stats
     case Stats =>
-      sender ! Player.PrintMessage("Health: " + health +
+      sender ! Player.PrintMessage(name + ": " + desc +
+        "\nHealth: " + health +
         "\nArmor: " + armor +
         "\nDamage: " + attack)
     case SetLoc(loc) =>
@@ -137,10 +135,11 @@ object NPC {
       (n \ "@attack").text.toInt,
       (n \ "@armor").text.toInt,
       (n \ "@speed").text.toInt,
-      (n \ "item").map(iNode => Item(iNode)).toList)
+      (n \ "item").map(iNode => Item(iNode)).toList,
+      (n \ "@desc").text)
   }
   case object RequestMove
-  case class SetLoc(loc:String)
+  case class SetLoc(loc: String)
   val moveTime = 150
 
 }
