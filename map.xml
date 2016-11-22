@@ -81,6 +81,7 @@ Exit north.
 		<item name="hat" damage="0" speed="0" armor="5" food ="0" itype="head">its pretty rad looking.</item>
 		<item name="ball" damage="2" speed="1" armor="0" food ="0" itype="offHand">it might be a soccer ball?</item>
 		<item name="apple" damage="0" speed="0" armor="0" food="5" itype="food">A delicious looking apple. Restores 5 health.</item>
+		<item name="apple" damage="0" speed="0" armor="0" food="5" itype="food">A delicious looking apple. Restores 5 health.</item>
 		<npcs name="bat" health="25" location="NinthRoom" attack="2" armor="1" speed="10" >
 		     <item name="bat meat" damage="0" speed="0" armor="0" food="5" itype="food" desc = "An evil little thing">Stringy and chewy, but restores 5 health.</item></npcs>
 		<exits>SeventhRoom,,,,,,</exits>

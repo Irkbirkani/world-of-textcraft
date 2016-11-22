@@ -299,6 +299,8 @@ class Player(
   def shortPath(room: String) = {
     Main.roomManager ! RoomManager.ShortPath(location.path.name, room)
   }
+  
+  
 
   //Player Tell Messaging
   def tellMessage(s: String): Unit = {

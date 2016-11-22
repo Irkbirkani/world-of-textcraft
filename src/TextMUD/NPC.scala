@@ -4,7 +4,7 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 import java.util.function.ToDoubleBiFunction
 
-class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int, val speed: Int, private var items: List[Item], val desc: String) extends Actor {
+class NPC(val name: String, var _health: Double, val startLoc: String, val attack: Int, val armor: Int, val speed: Int, private var items: List[Item], val desc: String) extends Actor {
   def health = _health
   import NPC._
   import Character._
@@ -13,11 +13,11 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
 
   Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
 
-  private var startLoc = ""
   val startHlth = _health
   val startItems = items
 
   private var victim: Option[ActorRef] = None
+
   def receive = {
     case TakeExit(dir) =>
       dir match {
@@ -75,8 +75,6 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
         "\nHealth: " + health +
         "\nArmor: " + armor +
         "\nDamage: " + attack)
-    case SetLoc(loc) =>
-      startLoc = loc
   }
 
   def kill(pl: String): Unit = {
@@ -139,7 +137,6 @@ object NPC {
       (n \ "@desc").text)
   }
   case object RequestMove
-  case class SetLoc(loc: String)
   val moveTime = 150
 
 }

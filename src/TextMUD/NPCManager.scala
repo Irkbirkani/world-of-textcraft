@@ -8,9 +8,8 @@ class NPCManager extends Actor {
   import NPCManager._
   def receive = {
     case NewNPC(name, health, loc, atk, armr, spd, itms, desc) =>
-      val n = context.actorOf(Props(new NPC(name, health, atk, armr, spd, itms, desc)), name)
+      val n = context.actorOf(Props(new NPC(name, health, loc, atk, armr, spd, itms, desc)), name)
       Main.roomManager ! RoomManager.EnterRoom(loc, n)
-      sender ! NPC.SetLoc(loc)
   }
 
 }

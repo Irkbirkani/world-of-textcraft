@@ -91,7 +91,7 @@ class Room(
   def getItem(itemName: String): Option[Item] = {
     items.find(_.name == itemName) match {
       case Some(item) => {
-        _items = _items.filter(_ != item)
+        _items = _items.filter(it => !it.eq(item))
         Some(item)
       }
       case None =>
