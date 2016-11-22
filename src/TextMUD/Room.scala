@@ -52,6 +52,13 @@ class Room(
       } else {
         sender ! KillCmnd(ch(0))
       }
+    case RoomCheck(c) =>
+      val ch = chars.filter(_.path.name == c)
+      if (ch.length == 0) {
+        sender ! Player.PrintMessage("A swing and a miss!")
+      } else {
+        sender ! View(ch(0))
+      }
   }
 
   //Print Description
@@ -115,6 +122,7 @@ object Room {
   case class SayMessage(msg: String, name: String)
   //Combat Management
   case class CheckInRoom(c: String)
+  case class RoomCheck(c:String)
 
   def apply(n: xml.Node): Room = {
     val keyword = (n \ "@keyword").text

@@ -10,6 +10,7 @@ class NPCManager extends Actor {
     case NewNPC(name, health, loc, atk, armr, spd, itms) =>
       val n = context.actorOf(Props(new NPC(name, health, atk, armr, spd, itms)), name)
       Main.roomManager ! RoomManager.EnterRoom(loc, n)
+      sender ! NPC.SetLoc(loc)
   }
 
 }

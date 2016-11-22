@@ -102,6 +102,12 @@ class Player(
       Main.roomManager ! RoomManager.EnterRoom("FirstRoom", self)
     case ResetVictim =>
       victim = None
+    case View(name) =>
+      name ! Stats
+    case Stats =>
+      sender ! PrintMessage("Health: " + health +
+        "\nArmor: " + armor +
+        "\nDamage: " + damage)
 
   }
 
@@ -140,7 +146,7 @@ class Player(
         if (inventory.count(_ == i) == 1) {
           output.println(i.name)
         } else if (inventory.count(_ == i) > 1) {
-          val numItem = inventory.count(_ == i) 
+          val numItem = inventory.count(_ == i)
           output.println(i.name + "(x" + numItem + ")")
         }
       }
@@ -239,23 +245,21 @@ class Player(
 
   def eat(item: String): Unit = {
     val food = getFromInventory(item)
-    if (health == playerHealth) {
-      output.println("Health at max.")
-      addToInventory(food.get)
-    } else {
-      food match {
-        case Some(fd) =>
-          fd.itype match {
-            case Item.food =>
+    food match {
+      case Some(fd) =>
+        fd.itype match {
+          case Item.food =>
+            if (health == playerHealth) {
+              output.println("Health at max")
+            } else
               _health += fd.food
-              output.println("You ate " + fd.name + ". Health is " + health.toInt)
-            case _ =>
-              output.println("you can't eat that.")
-              addToInventory(food.get)
-          }
-        case None =>
-          output.println("You cant eat what you don't have!")
-      }
+            output.println("You ate " + fd.name + ". Health is " + health.toInt)
+          case _ =>
+            output.println("You can't eat that.")
+            addToInventory(food.get)
+        }
+      case None =>
+        output.println("You cant eat what you don't have!")
     }
   }
 
@@ -286,6 +290,10 @@ class Player(
       isAlive = false
     }
     totalDmg
+  }
+
+  def view(name: String) = {
+    location ! Room.RoomCheck(name)
   }
 
   def shortPath(room: String) = {
@@ -330,13 +338,13 @@ class Player(
     else if (in.startsWith("unequip")) unequip(in.drop(8))
     else if ("character".startsWith(in)) printEquipment
     //combat commands
+    else if (in.startsWith("view")) view(in.drop(5))
     else if (in.startsWith("kill")) kill(in.drop(5))
     else if ("health".startsWith(in)) output.println("Health at: " + health)
     else if ("flee".startsWith(in) && victim.nonEmpty) {
       victim = None
       location ! Room.GetExit(util.Random.nextInt(5))
-    }
-    //player messaging
+    } //player messaging
     else if (in.startsWith("shout")) {
       Main.playerManager ! PlayerManager.PrintShoutMessage(in.drop(6), name)
     } else if (in.startsWith("say")) location ! Room.SayMessage(in.drop(4), name)

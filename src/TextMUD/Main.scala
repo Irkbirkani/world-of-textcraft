@@ -1,5 +1,4 @@
 package TextMUD
-
 import io.StdIn._
 import java.io.PrintStream
 import java.io.InputStream
@@ -43,6 +42,6 @@ object Main extends App {
   checkConnections()
 
   private def checkName(name: String): Boolean = {
-    name.contains('ÿ')
+    name.contains('ï¿½')
   }
 }

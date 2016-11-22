@@ -8,10 +8,14 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
   def health = _health
   import NPC._
   import Character._
-  Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
-
   private var _location: ActorRef = null
   def location = _location
+  
+  Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
+  
+  private var startLoc = ""
+  val startHlth = _health
+  val startItems = items
 
   private var victim: Option[ActorRef] = None
   def receive = {
@@ -24,6 +28,9 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
         case None =>
       }
     case RequestMove =>
+      println(name + " " + startLoc)
+      println(name + " " + startHlth)
+      println(name + " " + startItems)
       if (location != null) {
         this.move(util.Random.nextInt(5))
         Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
@@ -61,8 +68,17 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
     case ResetChar =>
       _health = startHlth
       isAlive = true
+      items = startItems
       victim = None
       Main.roomManager ! RoomManager.EnterRoom(startLoc, self)
+    case View(name) =>
+      name ! Stats
+    case Stats =>
+      sender ! Player.PrintMessage("Health: " + health +
+        "\nArmor: " + armor +
+        "\nDamage: " + attack)
+    case SetLoc(loc) =>
+      startLoc = loc
   }
 
   def kill(pl: String): Unit = {
@@ -114,8 +130,6 @@ class NPC(val name: String, var _health: Double, val attack: Int, val armor: Int
 }
 
 object NPC {
-  private var startLoc: String = ""
-  private var startHlth = 0.0
   def apply(n: xml.Node): Unit = {
     Main.npcManager ! NPCManager.NewNPC((n \ "@name").text,
       (n \ "@health").text.toDouble,
@@ -124,10 +138,9 @@ object NPC {
       (n \ "@armor").text.toInt,
       (n \ "@speed").text.toInt,
       (n \ "item").map(iNode => Item(iNode)).toList)
-    startLoc = (n \ "@location").text
-    startHlth = (n \ "@health").text.toDouble
   }
   case object RequestMove
+  case class SetLoc(loc:String)
   val moveTime = 150
 
 }
