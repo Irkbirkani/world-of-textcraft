@@ -1,10 +1,12 @@
 package TextMUD
 
+import akka.actor.ActorRef
+
 trait Class {
-  def classCommands(in: String, lvl: Int): Unit
-  val name:String
-  var _stamina: Int
-  var _classPower: Int
-  var _dmgReduc: Int
-  var _hlthInc: Int
+  def classCommands(in: String, pl: Player, pla: ActorRef): Unit
+  val name: String
+  val stamina: Int
+  val classPower: Int
+  val dmgReduc: Int
+  val hlthInc: Int
 }

@@ -104,7 +104,8 @@ class NPC(val name: String,
     val actDmg = if (damage == 0) 0
     else if (damage >= 1 && damage <= 5) dmg
     else dmg * 2
-    val totalDmg = actDmg - dmgReduction
+    val totalDmg = if (actDmg - (armor * armorReduc) < 0) 0 else actDmg - armor * armorReduc
+
     _health -= totalDmg
     if (health <= 0) isAlive = false
     totalDmg

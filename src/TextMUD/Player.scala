@@ -11,13 +11,15 @@ import scala.Console._
 
 class Player(
     val name: String,
-    private val clas: Class,
+    val clas: Class,
     private var _level: Int,
     private var _health: Double,
     private var _inventory: MutableDLList[Item],
     val input: BufferedReader,
     val output: PrintStream,
     val sock: Socket) extends Actor {
+
+  _health += clas.hlthInc
 
   import Player._
   import Character._
@@ -108,7 +110,11 @@ class Player(
       sender ! PrintMessage("Level: " + level + "\nClass: " + clasName)
     case SendExp(xp) =>
       addExp(xp)
-
+    case SendHeal(c, hl) =>
+      c ! ReceiveHeal(hl)
+    case ReceiveHeal(hl) =>
+      addHlth(hl)
+      output.println("Healed for " + hl + "!")
   }
 
   //Inventory Management
@@ -247,7 +253,13 @@ class Player(
   def clasName = clas.name
 
   //Health Management
+  val baseHlth = playerHealth + clas.hlthInc
   def health = _health
+
+  def addHlth(h: Int): Unit = {
+    val newHlth = health + h
+    if (newHlth > baseHlth) _health = baseHlth else _health = newHlth
+  }
 
   def eat(item: String): Unit = {
     val food = getFromInventory(item)
@@ -255,11 +267,17 @@ class Player(
       case Some(fd) =>
         fd.itype match {
           case Item.food =>
-            if (health == playerHealth) {
+            if (health == baseHlth) {
               output.println("Health at max")
-            } else if ((_health + fd.food) > playerHealth) _health = playerHealth
-            else _health += fd.food
-            output.println("You ate " + fd.name + ". Health is " + health.toInt)
+              addToInventory(food.get)
+            } else if ((_health + fd.food) > baseHlth) {
+              _health = baseHlth
+              output.println("You ate " + fd.name + ". Health is " + health.toInt)
+
+            } else if ((_health + fd.food) < baseHlth) {
+              _health += fd.food
+              output.println("You ate " + fd.name + ". Health is " + health.toInt)
+            }
           case _ =>
             output.println("You can't eat that.")
             addToInventory(food.get)
@@ -322,7 +340,7 @@ class Player(
     val actDmg = if (damage == 0) 0
     else if (damage >= 1 && damage <= 5) dmg
     else dmg * 2
-    val totalDmg = actDmg - (armor * armorReduc)
+    val totalDmg = if (actDmg - ((armor + clas.dmgReduc) * armorReduc) < 0) 0 else actDmg - (armor + clas.dmgReduc) * armorReduc
     _health -= totalDmg
     if (_health <= 0) {
       isAlive = false
@@ -377,10 +395,11 @@ class Player(
     else if ("gear".startsWith(in)) printEquipment
     else if ("character".startsWith(in)) {
       output.println(name +
-        "\n Location: " + location.path.name +
-        "\n Health: " + health +
-        "\n Level: " + level +
-        "\n EXP till next level: " + (newLvlAt - exp))
+        "\nClass: " + clas.name +
+        "\nLocation: " + location.path.name +
+        "\nHealth: " + health +
+        "\nLevel: " + level +
+        "\nEXP till next level: " + (newLvlAt - exp))
     } //combat commands
     else if (in.startsWith("view")) view(in.drop(5))
     else if (in.startsWith("kill")) kill(in.drop(5))
@@ -399,7 +418,7 @@ class Player(
       val source = Source.fromFile("help.txt")
       val lines = source.getLines()
       lines.foreach(output.println)
-    } else output.println("What?")
+    } else clas.classCommands(in, this, self)
   }
 }
 object Player {

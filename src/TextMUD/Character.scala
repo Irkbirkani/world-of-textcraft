@@ -10,10 +10,12 @@ object Character {
   case class KillCmnd(victim: ActorRef)
   case object AttackNow
   case class SendDamage(loc: ActorRef, dmg: Double, c: ActorRef)
-  case class SendExp(xp:Int)
+  case class SendExp(xp: Int)
   case class DamageTaken(dmg: Double, alive: Boolean, Health: Int)
   case object ResetChar
   case object ResetVictim
   case object Stats
+  case class SendHeal(c: ActorRef, hl: Int)
+  case class ReceiveHeal(hl:Int)
 
 }

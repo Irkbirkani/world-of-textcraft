@@ -27,13 +27,32 @@ object Main extends App {
       val in = new BufferedReader(new InputStreamReader(sock.getInputStream))
       val out = new PrintStream(sock.getOutputStream)
       Future {
-        out.println("What is your name? \nNo spaces. Letters only.")
+        out.println("What is your name?\nNo spaces. Letters only.")
         var name = (in.readLine().trim).filter(x => x.isLetter || x.isWhitespace).replaceAll(" ", "_")
         if (checkName(name)) {
           out.println("Use a raw connection")
           name = (in.readLine().trim).filter(x => x.isLetter || x.isWhitespace).replaceAll(" ", "_")
         }
-        playerManager ! PlayerManager.NewPlayer(name, new Warrior, Player.startLvl, Player.playerHealth, "FirstRoom", new MutableDLList[Item](), in, out, sock)
+        out.println("Choose a Class.\nWarrior\nMage\nRogue\nPriest")
+        var clas = in.readLine().trim.toUpperCase()
+        var cls: Class = null
+        while (clas.trim.toUpperCase != "WARRIOR"
+          && clas.trim.toUpperCase != "MAGE"
+          && clas.trim.toUpperCase != "ROGUE"
+          && clas.trim.toUpperCase != "PRIEST") {
+          out.println(clas + " is not a class. Try again.")
+          clas = in.readLine().trim.toUpperCase()
+        }
+        clas match {
+          case "WARRIOR" => cls = new Warrior
+          case "MAGE" => cls = new Mage
+          case "ROGUE" => cls = new Rogue
+          case "PRIEST" => cls = new Priest
+          case _ =>
+            out.println("Try again.")
+            clas = in.readLine.trim.toUpperCase()
+        }
+        playerManager ! PlayerManager.NewPlayer(name, cls, Player.startLvl, Player.playerHealth, "FirstRoom", new MutableDLList[Item](), in, out, sock)
       }
     }
   }
