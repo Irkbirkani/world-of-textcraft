@@ -33,7 +33,7 @@ object Main extends App {
           out.println("Use a raw connection")
           name = (in.readLine().trim).filter(x => x.isLetter || x.isWhitespace).replaceAll(" ", "_")
         }
-        playerManager ! PlayerManager.NewPlayer(name, Player.playerHealth, "FirstRoom", new MutableDLList[Item](), in, out, sock)
+        playerManager ! PlayerManager.NewPlayer(name, new Warrior, Player.startLvl, Player.playerHealth, "FirstRoom", new MutableDLList[Item](), in, out, sock)
       }
     }
   }

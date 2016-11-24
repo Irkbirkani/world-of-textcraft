@@ -4,7 +4,15 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 import java.util.function.ToDoubleBiFunction
 
-class NPC(val name: String, var _health: Double, val startLoc: String, val attack: Int, val armor: Int, val speed: Int, private var items: List[Item], val desc: String) extends Actor {
+class NPC(val name: String,
+    private var _level: Int,
+    private var _health: Double,
+    val startLoc: String,
+    val attack: Int,
+    val armor: Int,
+    val speed: Int,
+    private var items: List[Item],
+    val desc: String) extends Actor {
   def health = _health
   import NPC._
   import Character._
@@ -15,6 +23,7 @@ class NPC(val name: String, var _health: Double, val startLoc: String, val attac
 
   val startHlth = _health
   val startItems = items
+  val exp = (startHlth / 2).toInt
 
   private var victim: Option[ActorRef] = None
 
@@ -45,6 +54,7 @@ class NPC(val name: String, var _health: Double, val startLoc: String, val attac
           location ! Room.HasDied(self, name)
           Main.activityManager ! ActivityManager.Enqueue(450, ResetChar)
           sender ! ResetVictim
+          sender ! SendExp(exp)
           victim = None
           dropItems
           _location = null
@@ -72,6 +82,7 @@ class NPC(val name: String, var _health: Double, val startLoc: String, val attac
       name ! Stats
     case Stats =>
       sender ! Player.PrintMessage(name + ": " + desc +
+        "\nLevel: " + level +
         "\nHealth: " + health +
         "\nArmor: " + armor +
         "\nDamage: " + attack)
@@ -80,6 +91,7 @@ class NPC(val name: String, var _health: Double, val startLoc: String, val attac
   def kill(pl: String): Unit = {
     location ! Room.CheckInRoom(pl)
   }
+  def level = _level
 
   var isAlive = true
 
@@ -128,6 +140,7 @@ class NPC(val name: String, var _health: Double, val startLoc: String, val attac
 object NPC {
   def apply(n: xml.Node): Unit = {
     Main.npcManager ! NPCManager.NewNPC((n \ "@name").text,
+      (n \ "@level").text.toInt,
       (n \ "@health").text.toDouble,
       (n \ "@location").text,
       (n \ "@attack").text.toInt,

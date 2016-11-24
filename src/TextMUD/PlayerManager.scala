@@ -15,12 +15,12 @@ class PlayerManager extends Actor {
   def receive = {
     case CheckInput =>
       context.children.foreach(_ ! Player.ProcessInput)
-    case NewPlayer(name, health, loc, inv, in, out, sock) =>
+    case NewPlayer(name, clas, lvl, health, loc, inv, in, out, sock) =>
       if (context.child(name).nonEmpty) {
         out.println("Name taken.")
         sock.close
       } else {
-        val p = context.actorOf(Props(new Player(name, health, inv, in, out, sock)), name)
+        val p = context.actorOf(Props(new Player(name, clas, lvl, health, inv, in, out, sock)), name)
         Main.roomManager ! RoomManager.EnterRoom(loc, p)
       }
     case PrintShoutMessage(msg, name) =>
@@ -39,7 +39,7 @@ class PlayerManager extends Actor {
 object PlayerManager {
   //Player Management
   case object CheckInput
-  case class NewPlayer(name: String, health: Double, location: String, inventory: MutableDLList[Item], input: BufferedReader, output: PrintStream, sock: Socket)
+  case class NewPlayer(name: String, clas: Class, level: Int, health: Double, location: String, inventory: MutableDLList[Item], input: BufferedReader, output: PrintStream, sock: Socket)
 
   //Messaging Management
   case class PrintShoutMessage(msg: String, name: String)

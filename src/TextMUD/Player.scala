@@ -11,6 +11,8 @@ import scala.Console._
 
 class Player(
     val name: String,
+    private val clas: Class,
+    private var _level: Int,
     private var _health: Double,
     private var _inventory: MutableDLList[Item],
     val input: BufferedReader,
@@ -19,9 +21,6 @@ class Player(
 
   import Player._
   import Character._
-
-  def health = _health
-  private var victim: Option[ActorRef] = None
 
   //location access
   private var _location: ActorRef = null
@@ -78,6 +77,7 @@ class Player(
           clearInventory
           location ! Room.HasDied(self, name)
           sender ! ResetVictim
+          sender ! SendExp(pvpXP)
           victim = None
           Main.activityManager ! ActivityManager.Enqueue(50, ResetChar)
         } else if (victim.isEmpty) {
@@ -105,9 +105,9 @@ class Player(
     case View(name) =>
       name ! Stats
     case Stats =>
-      sender ! PrintMessage("Health: " + health +
-        "\nArmor: " + armor +
-        "\nDamage: " + damage)
+      sender ! PrintMessage("Level: " + level + "\nClass: " + clasName)
+    case SendExp(xp) =>
+      addExp(xp)
 
   }
 
@@ -243,6 +243,12 @@ class Player(
     }
   }
 
+  //Class Management
+  def clasName = clas.name
+
+  //Health Management
+  def health = _health
+
   def eat(item: String): Unit = {
     val food = getFromInventory(item)
     food match {
@@ -251,8 +257,8 @@ class Player(
           case Item.food =>
             if (health == playerHealth) {
               output.println("Health at max")
-            } else
-              _health += fd.food
+            } else if ((_health + fd.food) > playerHealth) _health = playerHealth
+            else _health += fd.food
             output.println("You ate " + fd.name + ". Health is " + health.toInt)
           case _ =>
             output.println("You can't eat that.")
@@ -270,7 +276,39 @@ class Player(
     }
   }
 
-  //Combat commands
+  //Level Management
+  def level = _level
+
+  private var _exp = 0
+  def exp = _exp
+
+  private var modifier = 10
+  def mod = math.pow(modifier, 2).toInt
+
+  private var _newLvlAt: Int = level * mod
+  def newLvlAt = _newLvlAt
+
+  def addExp(xp: Int) = {
+    _exp = (exp + xp)
+    output.println("You gained " + xp + " experience!")
+    if (exp >= newLvlAt) {
+      _exp = exp % newLvlAt
+      _level += 1
+      _newLvlAt = level * mod
+      output.println("You are now level " + level + "!")
+      if (level % 2 != 0) {
+        modifier += 1
+        println(mod)
+        println(_newLvlAt)
+      }
+    }
+  }
+
+  def pvpXP = level * modifier * 2
+
+  //Combat Management
+  private var victim: Option[ActorRef] = None
+
   var isAlive = true
 
   def kill(pl: String): Unit = {
@@ -299,8 +337,6 @@ class Player(
   def shortPath(room: String) = {
     Main.roomManager ! RoomManager.ShortPath(location.path.name, room)
   }
-  
-  
 
   //Player Tell Messaging
   def tellMessage(s: String): Unit = {
@@ -338,8 +374,14 @@ class Player(
     //player equipment
     else if (in.startsWith("equip")) equip(in.drop(6))
     else if (in.startsWith("unequip")) unequip(in.drop(8))
-    else if ("character".startsWith(in)) printEquipment
-    //combat commands
+    else if ("gear".startsWith(in)) printEquipment
+    else if ("character".startsWith(in)) {
+      output.println(name +
+        "\n Location: " + location.path.name +
+        "\n Health: " + health +
+        "\n Level: " + level +
+        "\n EXP till next level: " + (newLvlAt - exp))
+    } //combat commands
     else if (in.startsWith("view")) view(in.drop(5))
     else if (in.startsWith("kill")) kill(in.drop(5))
     else if ("health".startsWith(in)) output.println("Health at: " + health)
@@ -364,6 +406,8 @@ object Player {
   case object ProcessInput
   case class PrintMessage(msg: String)
   case class AddToInventory(item: Option[Item])
+
+  val startLvl = 1
 
   val punchDamage = 3
   val punchSpeed = 10

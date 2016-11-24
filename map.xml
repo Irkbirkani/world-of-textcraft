@@ -24,7 +24,7 @@ Exits to the south, east, or west
 Exits to the south or west.
 ===========================
 		</description>
-		<npcs name="Muffin" health="1000" location="ThirdRoom" attack="50" armor="50" speed="30" desc="A cute Welsh Corgi!">
+		<npcs name="Muffin" level="100" health="1000" location="ThirdRoom" attack="50" armor="50" speed="30" desc="A cute Welsh Corgi!">
 			<item name="Sword of Power" damage="500" speed="3" armor="0" food="0" itype="twoHand" >The most powerful weapon in the game!</item></npcs>
 		<exits>,FifthRoom,,SecondRoom,,</exits>
 	</room>
@@ -82,7 +82,7 @@ Exit north.
 		<item name="ball" damage="2" speed="1" armor="0" food ="0" itype="offHand">it might be a soccer ball?</item>
 		<item name="apple" damage="0" speed="0" armor="0" food="5" itype="food">A delicious looking apple. Restores 5 health.</item>
 		<item name="apple" damage="0" speed="0" armor="0" food="5" itype="food">A delicious looking apple. Restores 5 health.</item>
-		<npcs name="bat" health="25" location="NinthRoom" attack="2" armor="1" speed="10" >
+		<npcs name="bat" level="1" health="25" location="NinthRoom" attack="2" armor="1" speed="10" >
 		     <item name="bat meat" damage="0" speed="0" armor="0" food="5" itype="food" desc = "An evil little thing">Stringy and chewy, but restores 5 health.</item></npcs>
 		<exits>SeventhRoom,,,,,,</exits>
 	</room>
