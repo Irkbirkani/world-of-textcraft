@@ -15,7 +15,8 @@ object Character {
   case object ResetChar
   case object ResetVictim
   case object Stats
-  case class SendHeal(c: ActorRef, hl: Int)
-  case class ReceiveHeal(hl:Int)
+  case class HealCmnd(player: ActorRef)
+  case class SendHeal(c: ActorRef)
+  case class ReceiveHeal(hl: Int)
 
 }

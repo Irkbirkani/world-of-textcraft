@@ -110,8 +110,13 @@ class Player(
       sender ! PrintMessage("Level: " + level + "\nClass: " + clasName)
     case SendExp(xp) =>
       addExp(xp)
-    case SendHeal(c, hl) =>
-      c ! ReceiveHeal(hl)
+    case HealCmnd(pl) =>
+      output.println("Healing " + pl.path.name)
+      Main.activityManager ! ActivityManager.Enqueue(clas.abilitySpeed, SendHeal(pl))
+      println("enqueued heal")
+    case SendHeal(c) =>
+      val healAmnt = level * clas.abilityPower
+      c ! ReceiveHeal(healAmnt)
     case ReceiveHeal(hl) =>
       addHlth(hl)
       output.println("Healed for " + hl + "!")
@@ -330,7 +335,7 @@ class Player(
   var isAlive = true
 
   def kill(pl: String): Unit = {
-    location ! Room.CheckInRoom(pl)
+    location ! Room.CheckInRoom("kill", pl, self)
   }
 
   def d6 = util.Random.nextInt(6) + 1
@@ -349,7 +354,7 @@ class Player(
   }
 
   def view(name: String) = {
-    location ! Room.RoomCheck(name)
+    location ! Room.CheckInRoom("view", name, self)
   }
 
   def shortPath(room: String) = {

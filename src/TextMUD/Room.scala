@@ -45,28 +45,19 @@ class Room(
     //Messages  
     case SayMessage(msg, name) =>
       chars.foreach(p => p ! Player.PrintMessage(s"${RESET}${MAGENTA}$name: $msg${RESET}"))
-    case CheckInRoom(c) =>
-      val ch = chars.filter(_.path.name == c)
+    case CheckInRoom(cmd, pl, ar) =>
+      val ch = chars.filter(_.path.name == pl)
       if (ch.length == 0) {
-        sender ! Player.PrintMessage("A swing and a miss!")
-      } else {
-        sender ! KillCmnd(ch(0))
+        sender ! Player.PrintMessage("Invalid Target")
+      } else cmd match {
+        case "kill" =>
+          ar ! KillCmnd(ch(0))
+        case "view" =>
+          ar ! View(ch(0))
+        case "heal" =>
+          ar ! HealCmnd(ch(0))
       }
-    case RoomCheck(c) =>
-      val ch = chars.filter(_.path.name == c)
-      if (ch.length == 0) {
-        sender ! Player.PrintMessage(c+" isn't in the room!")
-      } else {
-        sender ! View(ch(0))
-      }
-    case HealCheck(c,hl) =>
-      val ch = chars.filter(_.path.name == c)
-      if (ch.length == 0) { 
-        sender ! Player.PrintMessage(c+" ins't in the room!")
-      }
-      else {
-        sender ! SendHeal(ch(0), hl)
-      }
+
   }
 
   //Print Description
@@ -129,9 +120,7 @@ object Room {
   //Messaging
   case class SayMessage(msg: String, name: String)
   //Combat Management
-  case class CheckInRoom(c: String)
-  case class RoomCheck(c:String)
-  case class HealCheck(c:String, hl:Int)
+  case class CheckInRoom(cmd: String, pl: String, ar: ActorRef)
 
   def apply(n: xml.Node): Room = {
     val keyword = (n \ "@keyword").text

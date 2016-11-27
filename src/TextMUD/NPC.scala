@@ -89,7 +89,7 @@ class NPC(val name: String,
   }
 
   def kill(pl: String): Unit = {
-    location ! Room.CheckInRoom(pl)
+    location ! Room.CheckInRoom("kill", pl, self)
   }
   def level = _level
 

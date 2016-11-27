@@ -9,4 +9,6 @@ trait Class {
   val classPower: Int
   val dmgReduc: Int
   val hlthInc: Int
+  val abilitySpeed:Int
+  val abilityPower:Int
 }
