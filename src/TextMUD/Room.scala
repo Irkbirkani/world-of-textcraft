@@ -22,7 +22,7 @@ class Room(
     case GetExit(dir) =>
       sender ! TakeExit(getExit(dir))
     case LinkRooms(rooms) =>
-      actorExits = exits.map(e => if (e.isEmpty) None else Some(rooms(e)))
+      actorExits = exits.map(e => if (e.isEmpty) None else Some(rooms(e.toUpperCase)))
       sender ! RoomManager.LinkingRooms(name, exits)
     //Item Management
     case GetItem(name, itemName) =>
@@ -56,6 +56,12 @@ class Room(
           ar ! View(ch(0))
         case "heal" =>
           ar ! HealCmnd(ch(0))
+        case "stun" =>
+          ar ! StunCmnd(ch(0))
+        case "poison" =>
+          ar ! PoisonCmnd(ch(0))
+        case _ =>
+          println("Unknown command sent.")
       }
 
   }

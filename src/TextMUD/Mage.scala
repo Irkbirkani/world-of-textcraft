@@ -4,13 +4,21 @@ import akka.actor.ActorRef
 
 class Mage extends Class {
   def classCommands(in: String, pl: Player, pla: ActorRef) = {
-    pla ! Player.PrintMessage("What?")
+    if (in.startsWith("teleport")) teleport(in.drop(9), pl, pla)
+    else pla ! Player.PrintMessage("What?")
 
+  }
+
+  def teleport(dest: String, pl: Player, pla: ActorRef) = {
+    if (pl.level < 1) pla ! Player.PrintMessage("Level not heigh ehough to teleport!")
+    else if (pl.level >= 1) {
+      Main.roomManager ! RoomManager.CheckExists(dest,pla)
+    }
   }
 
   val abilityPower = 3
   val abilitySpeed = 15
-  
+
   val name = "Mage"
 
   val stamina = 100

@@ -4,12 +4,18 @@ import akka.actor.ActorRef
 
 class Rogue extends Class {
   def classCommands(in: String, pl: Player, pla: ActorRef) = {
-      pla ! Player.PrintMessage("What?")
+    if (in.startsWith("poison")) poison(in.drop(7), pl, pla)
+    else pla ! Player.PrintMessage("What?")
+  }
+
+  def poison(vc: String, pl: Player, pla: ActorRef) = {
+    if (pl.level < 1) pla ! Player.PrintMessage("Level too low to use Poison!")
+    else pl.location ! Room.CheckInRoom("poison", vc, pla)
   }
 
   val abilityPower = 2
   val abilitySpeed = 15
-  
+
   val name = "Rogue"
 
   val stamina = 100

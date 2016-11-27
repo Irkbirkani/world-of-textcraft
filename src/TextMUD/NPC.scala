@@ -47,7 +47,7 @@ class NPC(val name: String,
     case AttackNow =>
       victim.foreach(c => c ! SendDamage(location, attack, c))
     case SendDamage(loc, dmg, c) =>
-      if (loc == location) {
+      if (!stunned && loc == location) {
         val realDamage = takeDamage(dmg)
         sender ! DamageTaken(realDamage, isAlive, health.toInt)
         if (!isAlive) {
@@ -83,9 +83,30 @@ class NPC(val name: String,
     case Stats =>
       sender ! Player.PrintMessage(name + ": " + desc +
         "\nLevel: " + level +
-        "\nHealth: " + health +
-        "\nArmor: " + armor +
-        "\nDamage: " + attack)
+        "\nHealth: " + health)
+    case SendPoison(vic, dmg) =>
+      sender ! TakePoison(dmg, isAlive, health.toInt)
+      if (!isAlive) {
+        location ! Room.HasDied(self, name)
+        sender ! ResetVictim
+        victim = None
+        Main.activityManager ! ActivityManager.Enqueue(50, ResetChar)
+      } else if (victim.isEmpty) {
+        victim = Some(sender)
+        Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
+      }
+    case TakePoison(dmg, alive, hp) =>
+      if (alive && victim.nonEmpty) {
+        kill(victim.get.path.name)
+      } else if (victim.nonEmpty) {
+        victim = None
+      }
+    case Stun(c) =>
+      stunned = true
+      Main.activityManager ! ActivityManager.Enqueue(30, Unstun(c))
+    case Unstun(c) =>
+      stunned = false
+      kill(c.path.name)
   }
 
   def kill(pl: String): Unit = {
@@ -94,6 +115,7 @@ class NPC(val name: String,
   def level = _level
 
   var isAlive = true
+  var stunned = false
 
   def dmgReduction = armor * armorReduc
 

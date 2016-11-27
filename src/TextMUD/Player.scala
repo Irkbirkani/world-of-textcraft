@@ -31,7 +31,7 @@ class Player(
   //Actor Management
   def receive = {
     case ProcessInput =>
-      if (input.ready()) {
+      if (input.ready() && !stunned) {
         val in = input.readLine().trim
         if (in.nonEmpty) {
           processCommand(in)
@@ -67,7 +67,7 @@ class Player(
         Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
       }
     case AttackNow =>
-      if (isAlive) {
+      if (isAlive && !stunned) {
         victim.foreach(c => c ! SendDamage(location, damage, c))
       }
     case SendDamage(loc, dmg, c) =>
@@ -120,6 +120,67 @@ class Player(
     case ReceiveHeal(hl) =>
       addHlth(hl)
       output.println("Healed for " + hl + "!")
+    case StunCmnd(c) =>
+      victim = Some(c)
+      if (victim.get == self) {
+        output.println("You cannot stun yourself.")
+        victim = None
+      } else {
+        output.println("You stunned " + c.path.name)
+        Main.activityManager ! ActivityManager.Enqueue(speed, SendStun(victim.get))
+        kill(c.path.name)
+      }
+    case SendStun(c) =>
+      c ! Stun(self)
+    case Stun(c) =>
+      stunned = true
+      Main.activityManager ! ActivityManager.Enqueue(30, Unstun(c))
+      output.println("You've been stunned!")
+    case Unstun(c) =>
+      stunned = false
+      output.println("You're no longer stunned!")
+      kill(c.path.name)
+    case StartTeleport(rm) =>
+      output.println("Teleporting to " + rm + "!")
+      Main.activityManager ! ActivityManager.Enqueue(100, Player.Teleport(rm))
+    case Teleport(rm) =>
+      Main.roomManager ! RoomManager.EnterRoom(rm, self)
+    case PoisonCmnd(c) =>
+      victim = Some(c)
+      if (victim.get == self) {
+        output.println("You cannot poison yourself.")
+        victim = None
+      } else {
+        output.println("You poisoned " + c.path.name)
+        poisoning = true
+        Main.activityManager ! ActivityManager.Enqueue(100, PoisonCountdown)
+        Main.activityManager ! ActivityManager.Enqueue(speed, SendPoison(victim.get, (level * clas.abilityPower)))
+        kill(c.path.name)
+      }
+    case SendPoison(vic, dmg) =>
+      sender ! DamageTaken(dmg, isAlive, health.toInt)
+      output.println(sender.path.name + " dealt " + dmg + " damage! Health is at " + health)
+      if (!isAlive) {
+        clearInventory
+        location ! Room.HasDied(self, name)
+        sender ! ResetVictim
+        sender ! SendExp(pvpXP)
+        victim = None
+        Main.activityManager ! ActivityManager.Enqueue(50, ResetChar)
+      } else if (victim.isEmpty) {
+        victim = Some(sender)
+        Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
+      }
+    case TakePoison(dmg, alive, hp) =>
+      if (alive && victim.nonEmpty && poisoning) {
+        output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "! " + victim.get.path.name + " has " + hp + " health left!")
+        Main.activityManager ! ActivityManager.Enqueue(speed, SendPoison(victim.get, clas.abilityPower))
+      } else if (victim.nonEmpty) {
+        output.println("you killed " + victim.get.path.name + ".")
+        victim = None
+      }
+    case PoisonCountdown =>
+      poisoning = false
   }
 
   //Inventory Management
@@ -333,6 +394,9 @@ class Player(
   private var victim: Option[ActorRef] = None
 
   var isAlive = true
+  var stunned = false
+  var poisoned = false //tells weather a player is poisoned or not i.e. the person who is taking the damage
+  var poisoning = false // tells weather a player is currently poisoning someone.
 
   def kill(pl: String): Unit = {
     location ! Room.CheckInRoom("kill", pl, self)
@@ -430,6 +494,8 @@ object Player {
   case object ProcessInput
   case class PrintMessage(msg: String)
   case class AddToInventory(item: Option[Item])
+  case class StartTeleport(rm: String)
+  case class Teleport(rm: String)
 
   val startLvl = 1
 
