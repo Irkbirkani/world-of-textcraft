@@ -9,7 +9,7 @@ class Rogue extends Class {
   }
 
   def poison(vc: String, pl: Player, pla: ActorRef) = {
-    if (pl.level < 1) pla ! Player.PrintMessage("Level too low to use Poison!")
+    if (pl.level < 1000) pla ! Player.PrintMessage("Level too low to use Poison!")
     else pl.location ! Room.CheckInRoom("poison", vc, pla)
   }
 

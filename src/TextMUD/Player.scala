@@ -154,36 +154,22 @@ class Player(
         victim = None
       } else {
         output.println("You poisoned " + c.path.name)
-        poisoning = true
-        Main.activityManager ! ActivityManager.Enqueue(100, PoisonCountdown)
-        Main.activityManager ! ActivityManager.Enqueue(speed, SendPoison(victim.get, (level * clas.abilityPower)))
-        kill(c.path.name)
+        Main.activityManager ! ActivityManager.Enqueue(speed, SendPoison(c, clas.abilityPower * level))
+        kill(victim.get.path.name)
       }
-    case SendPoison(vic, dmg) =>
-      sender ! DamageTaken(dmg, isAlive, health.toInt)
-      output.println(sender.path.name + " dealt " + dmg + " damage! Health is at " + health)
-      if (!isAlive) {
-        clearInventory
-        location ! Room.HasDied(self, name)
-        sender ! ResetVictim
-        sender ! SendExp(pvpXP)
-        victim = None
-        Main.activityManager ! ActivityManager.Enqueue(50, ResetChar)
-      } else if (victim.isEmpty) {
-        victim = Some(sender)
-        Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
+    case SendPoison(c, dmg) =>
+      c ! Poisoned(dmg)
+    case Poisoned(dmg) =>
+      poisoned = true
+      output.println("You've been poisoned!")
+      if (poisoned) {
+        rmvHlth(dmg)
+        output.println("Poison did " + dmg + " damage!")
+        poison(dmg)
       }
-    case TakePoison(dmg, alive, hp) =>
-      if (alive && victim.nonEmpty && poisoning) {
-        output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "! " +
-          victim.get.path.name + " has " + hp + " health left!")
-        Main.activityManager ! ActivityManager.Enqueue(speed, SendPoison(victim.get, clas.abilityPower))
-      } else if (victim.nonEmpty) {
-        output.println("you killed " + victim.get.path.name + ".")
-        victim = None
-      }
-    case PoisonCountdown =>
-      poisoning = false
+      Main.activityManager ! ActivityManager.Enqueue(100, Unpoison)
+    case Unpoison =>
+      poisoned = false
   }
 
   //Inventory Management
@@ -340,6 +326,13 @@ class Player(
     if (newHlth > baseHlth) _health = baseHlth else _health = newHlth
   }
 
+  def rmvHlth(dmg: Int) = {
+    val newHlth = health - dmg
+    if (newHlth <= 0) {
+      Main.activityManager ! ActivityManager.Enqueue(50, ResetChar)
+    } else _health -= dmg
+  }
+
   def eat(item: String): Unit = {
     val food = getFromInventory(item)
     food match {
@@ -408,7 +401,17 @@ class Player(
 
   var isAlive = true
   var stunned = false
-  var poisoning = false // tells weather a player is currently poisoning someone.
+  var poisoned = false
+
+  def poison(dmg: Int) = {
+    var count = 3
+    while (poisoned) {
+      if (count == 0) {
+        Main.activityManager ! ActivityManager.Enqueue(20, Poisoned(dmg))
+        count = 3
+      } else count -= 1
+    }
+  }
 
   def kill(pl: String): Unit = {
     location ! Room.CheckInRoom("kill", pl, self)

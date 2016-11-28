@@ -31,9 +31,8 @@ object Character {
   case class Unstun(victim: ActorRef)
   //poison CCs
   case class PoisonCmnd(victim: ActorRef)
-  case class SendPoison(victim: ActorRef, dmg:Double)
-  case class PoisonCountdown(ticks: Int)
-  case class TakePoison(dmg:Double, alive:Boolean, health:Int)
-  case class Unpoison(ar: ActorRef)
+  case class SendPoison(ar: ActorRef, dmg: Int)
+  case class Poisoned(dmg: Int)
+  case object Unpoison
 
 }

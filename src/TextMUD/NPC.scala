@@ -20,10 +20,11 @@ class NPC(val name: String,
   def location = _location
 
   Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
-
+  //set start values
   val startHlth = _health
   val startItems = items
   val exp = (startHlth / 2).toInt
+  def level = _level
 
   private var victim: Option[ActorRef] = None
 
@@ -87,23 +88,15 @@ class NPC(val name: String,
     case ReceiveHeal(hl) =>
       addHlth(hl)
       sender ! Player.PrintMessage("Healed " + name + " for " + hl + "!")
-    case SendPoison(vic, dmg) =>
-      sender ! TakePoison(dmg, isAlive, health.toInt)
-      if (!isAlive) {
-        location ! Room.HasDied(self, name)
-        sender ! ResetVictim
-        victim = None
-        Main.activityManager ! ActivityManager.Enqueue(50, ResetChar)
-      } else if (victim.isEmpty) {
-        victim = Some(sender)
-        Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
+    case Poisoned(dmg) =>
+      poisoned = true
+      if (poisoned) {
+        rmvHlth(dmg)
+        poison(dmg)
       }
-    case TakePoison(dmg, alive, hp) =>
-      if (alive && victim.nonEmpty) {
-        kill(victim.get.path.name)
-      } else if (victim.nonEmpty) {
-        victim = None
-      }
+      Main.activityManager ! ActivityManager.Enqueue(100, Unpoison)
+    case Unpoison =>
+      poisoned = false
     case Stun(c) =>
       stunned = true
       Main.activityManager ! ActivityManager.Enqueue(30, Unstun(c))
@@ -111,14 +104,24 @@ class NPC(val name: String,
       stunned = false
       kill(c.path.name)
   }
-
+  //Combat Management
   def kill(pl: String): Unit = {
     location ! Room.CheckInRoom("kill", pl, self)
   }
-  def level = _level
 
   var isAlive = true
   var stunned = false
+  var poisoned = false
+
+  def poison(dmg: Int) = {
+    var count = 3
+    while (poisoned) {
+      if (count == 0) {
+        Main.activityManager ! ActivityManager.Enqueue(20, Poisoned(dmg))
+        count = 3
+      } else count -= 1
+    }
+  }
 
   def dmgReduction = armor * armorReduc
 
@@ -130,21 +133,32 @@ class NPC(val name: String,
     else if (damage >= 1 && damage <= 5) dmg
     else dmg * 2
     val totalDmg = if (actDmg - (armor * armorReduc) < 0) 0 else actDmg - armor * armorReduc
-
     _health -= totalDmg
     if (health <= 0) isAlive = false
     totalDmg
   }
+
+  //Health Management
   def addHlth(h: Int): Unit = {
     val newHlth = health + h
     if (newHlth > startHlth) _health = startHlth else _health = newHlth
   }
 
+  def rmvHlth(dmg: Int) = {
+    val newHlth = health - dmg
+    if (newHlth <= 0) {
+      Main.activityManager ! ActivityManager.Enqueue(450, ResetChar)
+    } else _health -= dmg
+  }
+
+  //Movement
   def move(direction: Int): Unit = {
     if (victim.isEmpty) {
       location ! Room.GetExit(direction)
     }
   }
+
+  //Items Management
   def dropItems = {
     def getItems(itemName: String): Option[Item] = {
       this.items.find(_.name == itemName) match {
