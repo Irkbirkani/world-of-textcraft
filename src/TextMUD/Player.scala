@@ -68,9 +68,9 @@ class Player(
       }
     case AttackNow =>
       if (isAlive && !stunned) {
-        victim.foreach(c => c ! SendDamage(location, damage, c))
+        victim.foreach(c => c ! SendDamage(location, damage))
       }
-    case SendDamage(loc, dmg, c) =>
+    case SendDamage(loc, dmg) =>
       if (loc == location) {
         val realDamage = takeDamage(dmg)
         sender ! DamageTaken(realDamage, isAlive, health.toInt)
@@ -91,7 +91,8 @@ class Player(
       }
     case DamageTaken(dmg, alive, hp) =>
       if (alive && victim.nonEmpty) {
-        output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "! " + victim.get.path.name + " has " + hp + " health left!")
+        output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "! " +
+          victim.get.path.name + " has " + hp + " health left!")
         kill(victim.get.path.name)
       } else if (victim.nonEmpty) {
         output.println("you killed " + victim.get.path.name + ".")
@@ -120,6 +121,7 @@ class Player(
     case ReceiveHeal(hl) =>
       addHlth(hl)
       output.println("Healed for " + hl + "!")
+      sender ! Player.PrintMessage("Healed " + name + " for " + hl + "!")
     case StunCmnd(c) =>
       victim = Some(c)
       if (victim.get == self) {
@@ -128,7 +130,7 @@ class Player(
       } else {
         output.println("You stunned " + c.path.name)
         Main.activityManager ! ActivityManager.Enqueue(speed, SendStun(victim.get))
-        kill(c.path.name)
+        kill(victim.get.path.name)
       }
     case SendStun(c) =>
       c ! Stun(self)
@@ -173,7 +175,8 @@ class Player(
       }
     case TakePoison(dmg, alive, hp) =>
       if (alive && victim.nonEmpty && poisoning) {
-        output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "! " + victim.get.path.name + " has " + hp + " health left!")
+        output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "! " +
+          victim.get.path.name + " has " + hp + " health left!")
         Main.activityManager ! ActivityManager.Enqueue(speed, SendPoison(victim.get, clas.abilityPower))
       } else if (victim.nonEmpty) {
         output.println("you killed " + victim.get.path.name + ".")
@@ -284,8 +287,14 @@ class Player(
   def printEquipment = {
     if (equipment.length == 0) {
       output.println("Nothing equipped.")
+      output.println("Armor: " + (armor + clas.dmgReduc) +
+        "\nDamage: " + damage +
+        "\nSpeed: " + speed)
     } else {
       equipment.foreach(c => output.println(c.bodyPart + ": " + c.item.name))
+      output.println("Armor: " + armor +
+        "\nDamage: " + damage +
+        "\nSpeed: " + speed)
     }
   }
 
@@ -317,6 +326,10 @@ class Player(
 
   //Class Management
   def clasName = clas.name
+  def printAbilities = {
+    output.println("Abilities:")
+    clas.abilities.foreach(a => output.println(a._1 + " at level " + a._2))
+  }
 
   //Health Management
   val baseHlth = playerHealth + clas.hlthInc
@@ -395,7 +408,6 @@ class Player(
 
   var isAlive = true
   var stunned = false
-  var poisoned = false //tells weather a player is poisoned or not i.e. the person who is taking the damage
   var poisoning = false // tells weather a player is currently poisoning someone.
 
   def kill(pl: String): Unit = {
@@ -470,6 +482,7 @@ class Player(
         "\nLevel: " + level +
         "\nEXP till next level: " + (newLvlAt - exp))
     } //combat commands
+    else if ("abilities".startsWith(in)) printAbilities
     else if (in.startsWith("view")) view(in.drop(5))
     else if (in.startsWith("kill")) kill(in.drop(5))
     else if ("health".startsWith(in)) output.println("Health at: " + health)

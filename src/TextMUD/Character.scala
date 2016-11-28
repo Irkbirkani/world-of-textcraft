@@ -15,7 +15,7 @@ object Character {
   //kill CCs
   case class KillCmnd(victim: ActorRef)
   case object AttackNow
-  case class SendDamage(loc: ActorRef, dmg: Double, c: ActorRef)
+  case class SendDamage(loc: ActorRef, dmg: Double)
   case class SendExp(xp: Int)
   case class DamageTaken(dmg: Double, alive: Boolean, Health: Int)
   case object ResetChar

@@ -45,9 +45,9 @@ class NPC(val name: String,
       var victim = c
       Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
     case AttackNow =>
-      victim.foreach(c => c ! SendDamage(location, attack, c))
-    case SendDamage(loc, dmg, c) =>
-      if (!stunned && loc == location) {
+      if (!stunned) victim.foreach(c => c ! SendDamage(location, attack))
+    case SendDamage(loc, dmg) =>
+      if (loc == location) {
         val realDamage = takeDamage(dmg)
         sender ! DamageTaken(realDamage, isAlive, health.toInt)
         if (!isAlive) {
@@ -84,6 +84,9 @@ class NPC(val name: String,
       sender ! Player.PrintMessage(name + ": " + desc +
         "\nLevel: " + level +
         "\nHealth: " + health)
+    case ReceiveHeal(hl) =>
+      addHlth(hl)
+      sender ! Player.PrintMessage("Healed " + name + " for " + hl + "!")
     case SendPoison(vic, dmg) =>
       sender ! TakePoison(dmg, isAlive, health.toInt)
       if (!isAlive) {
@@ -131,6 +134,10 @@ class NPC(val name: String,
     _health -= totalDmg
     if (health <= 0) isAlive = false
     totalDmg
+  }
+  def addHlth(h: Int): Unit = {
+    val newHlth = health + h
+    if (newHlth > startHlth) _health = startHlth else _health = newHlth
   }
 
   def move(direction: Int): Unit = {

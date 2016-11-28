@@ -11,4 +11,5 @@ trait Class {
   val hlthInc: Int
   val abilitySpeed:Int
   val abilityPower:Int
+  val abilities:Map[String,Int]
 }

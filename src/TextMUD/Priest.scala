@@ -10,15 +10,14 @@ class Priest extends Class {
   }
 
   def heal(pl: Player, nm: String, pla: ActorRef) = {
-    if (pl.level < 5) {
-      pla ! Player.PrintMessage("Your level isn't high enough for that ability!")
-    } else if (pl.level >= 5) {
-      pl.location ! Room.CheckInRoom("heal", nm, pla)
-    }
+    if (pl.level < 3) {
+      pla ! Player.PrintMessage("Level too low to use heal!")
+    } else pl.location ! Room.CheckInRoom("heal", nm, pla)
   }
 
   val abilitySpeed = 20
   val abilityPower = 3
+  val abilities = Map("Heal" -> 3)
 
   val name = "Priest"
 
