@@ -32,9 +32,9 @@ class NPC(val name: String,
     case TakeExit(dir) =>
       dir match {
         case Some(dest) =>
-          if (_location != null) location ! Room.LeaveRoom(self, name)
+          if (_location != null) location ! Room.LeaveRoom(self, name, false)
           _location = dest
-          location ! Room.EnterRoom(self, name)
+          location ! Room.EnterRoom(self, name, false)
         case None =>
       }
     case RequestMove =>

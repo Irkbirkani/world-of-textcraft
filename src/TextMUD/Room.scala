@@ -30,23 +30,27 @@ class Room(
     case DropItem(name, item) =>
       dropItem(item)
     //Player Management
-    case EnterRoom(pl, name) =>
-      chars.foreach(p => p ! Player.PrintMessage(name + " entered the room."))
-      addPlayer(pl)
-    case LeaveRoom(pl, name) =>
-      chars.foreach(p => p ! Player.PrintMessage(name + " left the room."))
+    case EnterRoom(pl, name, stlth) =>
+      if (!stlth) {
+        chars.foreach(p => p._1 ! Player.PrintMessage(name + " entered the room."))
+      }
+      addPlayer(pl, stlth)
+    case LeaveRoom(pl, name, stlth) =>
+      if (!stlth) {
+        chars.foreach(p => p._1 ! Player.PrintMessage(name + " left the room."))
+      }
       removePlayer(pl)
     case LeaveGame(pl, name) =>
-      chars.foreach(p => p ! Player.PrintMessage(name + " left the game."))
+      chars.foreach(p => p._1 ! Player.PrintMessage(name + " left the game."))
       removePlayer(pl)
     case HasDied(pl, name) =>
-      chars.foreach(p => p ! Player.PrintMessage(name + " has died!"))
+      chars.foreach(p => p._1 ! Player.PrintMessage(name + " has died!"))
       removePlayer(pl)
     //Messages  
     case SayMessage(msg, name) =>
-      chars.foreach(p => p ! Player.PrintMessage(s"${RESET}${MAGENTA}$name: $msg${RESET}"))
+      chars.foreach(p => p._1 ! Player.PrintMessage(s"${RESET}${MAGENTA}$name: $msg${RESET}"))
     case CheckInRoom(cmd, pl, ar) =>
-      val ch = chars.filter(_.path.name == pl)
+      val ch = chars.filter(_._1.path.name == pl).map(x => x._1)
       if (ch.length == 0) {
         sender ! Player.PrintMessage("Invalid Target")
       } else cmd match {
@@ -71,7 +75,7 @@ class Room(
     s"${RESET}${CYAN}$name\n$description${RESET}" +
       s"${RESET}${GREEN}\nYou see: \n" +
       { GREEN } + (if (items.length == 0) "nothing" else (for (i <- 0 until items.length) yield (items(i).name)).mkString("\n")) + "\n========" + { RESET } +
-      { RESET } + { YELLOW } + "\nPlayers in room: \n" + chars.map(_.path.name).mkString("\n") + "\n========== " + { RESET }
+      { RESET } + { YELLOW } + "\nPlayers in room: \n" + chars.filter(_._2 == false).map(_._1.path.name).mkString("\n") + "\n========== " + { RESET }
   }
 
   //Room Exit Management
@@ -82,13 +86,13 @@ class Room(
   private var actorExits: List[Option[ActorRef]] = List.fill(6)(None)
 
   //Room Player Management
-  private var _chars: List[ActorRef] = List()
+  private var _chars: List[(ActorRef, Boolean)] = List()
 
   def chars = _chars
 
-  def addPlayer(char: ActorRef): Unit = _chars = char :: chars
+  def addPlayer(char: ActorRef, stlth: Boolean): Unit = _chars = (char, stlth) :: chars
 
-  def removePlayer(char: ActorRef): Unit = _chars = _chars.filter(_ != char)
+  def removePlayer(char: ActorRef): Unit = _chars = _chars.filter(_._1 != char)
 
   //Room Item Management
   def items = _items
@@ -119,8 +123,8 @@ object Room {
   case class GetExit(dir: Int)
   case class LinkRooms(rooms: BSTMap[String, ActorRef])
   //Room Character Management
-  case class LeaveRoom(p: ActorRef, name: String)
-  case class EnterRoom(p: ActorRef, name: String)
+  case class EnterRoom(p: ActorRef, name: String, stealthed: Boolean)
+  case class LeaveRoom(p: ActorRef, name: String, stealthed: Boolean)
   case class HasDied(p: ActorRef, name: String)
   case class LeaveGame(p: ActorRef, name: String)
   //Messaging

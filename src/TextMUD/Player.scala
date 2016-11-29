@@ -42,23 +42,27 @@ class Player(
       item match {
         case Some(item) =>
           addToInventory(item)
-          location ! Room.SayMessage("picked up " + item.name + ".", name)
+          if (!sneaking) location ! Room.SayMessage("picked up " + item.name + ".", name)
+          else output.println("You grabbed " + item.name + "!")
         case None =>
           output.println("Item not found")
       }
     case TakeExit(dir) =>
       dir match {
         case Some(dest) =>
-          if (_location != null) location ! Room.LeaveRoom(self, name)
+          if (_location != null) location ! Room.LeaveRoom(self, name, sneaking)
           _location = dest
-          location ! Room.EnterRoom(self, name)
-
+          location ! Room.EnterRoom(self, name, sneaking)
           location ! Room.PrintDescription
         case None =>
           output.println("You can't go that way")
       }
     case KillCmnd(c) =>
       victim = Some(c)
+      if (sneaking) {
+        sneaking = false
+        location ! Room.EnterRoom(self, name, sneaking)
+      }
       if (victim.get == self) {
         output.println("You cannot kill yourself.")
         victim = None
@@ -170,6 +174,13 @@ class Player(
       Main.activityManager ! ActivityManager.Enqueue(100, Unpoison)
     case Unpoison =>
       poisoned = false
+    case Sneak =>
+      sneaking = true
+      output.println("You are sneaking!")
+      Main.activityManager ! ActivityManager.Enqueue(600, Unsneak)
+    case Unsneak =>
+      if (sneaking) output.println("You are no longer sneaking!")
+      sneaking = false
   }
 
   //Inventory Management
@@ -278,7 +289,7 @@ class Player(
         "\nSpeed: " + speed)
     } else {
       equipment.foreach(c => output.println(c.bodyPart + ": " + c.item.name))
-      output.println("Armor: " + armor +
+      output.println("Armor: " + (armor + clas.dmgReduc) +
         "\nDamage: " + damage +
         "\nSpeed: " + speed)
     }
@@ -402,6 +413,7 @@ class Player(
   var isAlive = true
   var stunned = false
   var poisoned = false
+  var sneaking = false
 
   def poison(dmg: Int) = {
     var count = 3
@@ -468,9 +480,9 @@ class Player(
     else if (in.startsWith("drop")) getFromInventory(in.trim.drop(5)) match {
       case Some(item) =>
         location ! Room.DropItem(name, item)
-        location ! Room.SayMessage("dropped " + item.name + ".", name)
+        if (!sneaking) location ! Room.SayMessage("dropped " + item.name + ".", name)
       case None =>
-        PrintMessage("You can't drop what you dont have.")
+        output.println("You can't drop what you dont have.")
     }
     else if (in.startsWith("eat")) eat(in.drop(4))
     //player equipment
@@ -512,6 +524,8 @@ object Player {
   case class AddToInventory(item: Option[Item])
   case class StartTeleport(rm: String)
   case class Teleport(rm: String)
+  case object Sneak
+  case object Unsneak
 
   val startLvl = 1
 

@@ -5,6 +5,7 @@ import akka.actor.ActorRef
 class Rogue extends Class {
   def classCommands(in: String, pl: Player, pla: ActorRef) = {
     if (in.startsWith("poison")) poison(in.drop(7), pl, pla)
+    else if (in.startsWith("sneak")) pla ! Player.Sneak
     else pla ! Player.PrintMessage("What?")
   }
 
