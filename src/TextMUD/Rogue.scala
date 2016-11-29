@@ -16,7 +16,7 @@ class Rogue extends Class {
 
   val abilityPower = 2
   val abilitySpeed = 15
-  val abilities = Map("Poison" -> 3)
+  val abilities = Map("Sneak" -> 1)//, "Poison" -> 3)
 
   val name = "Rogue"
 
