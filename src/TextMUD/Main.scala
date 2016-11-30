@@ -29,10 +29,7 @@ object Main extends App {
       Future {
         out.println("What is your name?\nNo spaces. Letters only.")
         var name = (in.readLine().trim).filter(x => x.isLetter || x.isWhitespace).replaceAll(" ", "_")
-        if (checkName(name)) {
-          out.println("Use a raw connection")
-          name = (in.readLine().trim).filter(x => x.isLetter || x.isWhitespace).replaceAll(" ", "_")
-        }
+
         out.println("Choose a Class.\nWarrior\nMage\nRogue\nPriest")
         var clas = in.readLine().trim.toUpperCase()
         var cls: Class = null
@@ -60,7 +57,4 @@ object Main extends App {
   system.scheduler.schedule(0.seconds, 0.1.seconds, playerManager, PlayerManager.CheckInput)
   checkConnections()
 
-  private def checkName(name: String): Boolean = {
-    name.contains('ï')
-  }
 }
