@@ -10,7 +10,7 @@ class Priest extends Class {
   }
 
   def heal(pl: Player, nm: String, pla: ActorRef) = {
-    if (pl.level < 3) {
+    if (pl.level < 1) {
       pla ! Player.PrintMessage("Level too low to use heal!")
     } else pl.location ! Room.CheckInRoom("heal", nm, pla)
   }

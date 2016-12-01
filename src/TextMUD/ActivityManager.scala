@@ -19,11 +19,11 @@ class ActivityManager extends Actor {
   }
   private def BHComp(a: Activity, b: Activity): Int = {
     if (a.time == b.time) 0
-    else if (a.time > b.time) 1
+    else if (a.time < b.time) 1
     else (-1)
   }
-//  private val queue = new BinaryHeapPriorityQueue[Activity](BHComp)
-  private val queue = new SortedListPriorityQueue[Activity](_.time < _.time)
+  private val queue = new BinaryHeapPriorityQueue[Activity](BHComp)
+//  private val queue = new SortedListPriorityQueue[Activity](_.time < _.time)
   case class Activity(time: Int, sender: ActorRef, message: Any)
 }
 
