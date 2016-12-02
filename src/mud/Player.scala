@@ -1,4 +1,4 @@
-package TextMUD
+package mud
 
 import scala.io.Source
 import akka.actor.Actor
@@ -60,8 +60,7 @@ class Player(
     case KillCmnd(c) =>
       victim = Some(c)
       if (sneaking) {
-        sneaking = false
-        location ! Room.EnterRoom(self, name, sneaking)
+        self ! Unsneak
       }
       if (victim.get == self) {
         output.println("You cannot kill yourself.")
@@ -181,6 +180,7 @@ class Player(
     case Unsneak =>
       if (sneaking) output.println("You are no longer sneaking!")
       sneaking = false
+      location ! Room.Unstealth(self)
   }
 
   //Inventory Management
@@ -325,7 +325,7 @@ class Player(
   def clasName = clas.name
   def printAbilities = {
     output.println("Abilities:")
-    clas.abilities.foreach(a => output.println(a._1 + " at level " + a._2))
+    clas.abilities.foreach(a => output.println(a._1 + ": available at level " + a._2))
   }
 
   //Health Management
@@ -513,7 +513,12 @@ class Player(
     else if ("help".startsWith(in)) {
       val source = Source.fromFile("help.txt")
       val lines = source.getLines()
-      lines.foreach(output.println)
+      for (i <- lines) {
+        if (i.startsWith("~")) {
+          val h = i.drop(1)
+          output.println(s"${RESET}${GREEN}$h${RESET}")
+        } else output.println(i)
+      }
     } else clas.classCommands(in, this, self)
   }
 }

@@ -1,26 +1,28 @@
-List of Commands:
-Movement Commands:
+~Movement Commands:
 north -> move north
 south -> move south
 east -> move east
 west -> move west
 up -> move up
 down -> move down
+goto "Room" -> get directions to a room
 Note: movement commands are not available during combat
-Inventory Commands:
+~Inventory Commands:
 inventory -> shows you your inventory
 inspect "item" -> learn a little more about an item in your inventory!
 get "item" -> add item to your inventory
 drop "item" -> remove item from your inventory
-Equipment Commands:
+~Equipment Commands:
 equip "item" -> add item to your equipment
 unequip "item" -> remove item from your equipment
-character -> prints out your current equipment
-Combat Commands:
+gear -> prints out your current equipment and stats
+character -> prints out general info about you.
+~Combat Commands:
 kill "Character" -> attack specified NPC or Player
-flee -> only usable in combat--flee in a random direction(may not work)
+flee -> only usable in combat--flee in a random direction
 health -> show your current health
-Messaging Commands:
+ability -> prints out all abilities for your class
+~Messaging Commands:
 shout "msg" -> says a message to everyone in the game
 say "msg" -> says your message to players in the same room as you
 tell "player" "msg" -> tell a specific player a message

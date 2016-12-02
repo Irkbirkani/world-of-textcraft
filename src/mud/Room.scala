@@ -1,4 +1,4 @@
-package TextMUD
+package mud
 
 import akka.actor.Actor
 import akka.actor.actorRef2Scala
@@ -43,6 +43,14 @@ class Room(
     case LeaveGame(pl, name) =>
       chars.foreach(p => p._1 ! Player.PrintMessage(name + " left the game."))
       removePlayer(pl)
+    case Unstealth(pl) =>
+      _chars.find(_._1 == pl) match {
+        case Some(p) =>
+          p._2 == false
+        case None =>
+          println("None called on Room.Unstealth")
+
+      }
     case HasDied(pl, name) =>
       chars.foreach(p => p._1 ! Player.PrintMessage(name + " has died!"))
       removePlayer(pl)
@@ -125,6 +133,7 @@ object Room {
   //Room Character Management
   case class EnterRoom(p: ActorRef, name: String, stealthed: Boolean)
   case class LeaveRoom(p: ActorRef, name: String, stealthed: Boolean)
+  case class Unstealth(p: ActorRef)
   case class HasDied(p: ActorRef, name: String)
   case class LeaveGame(p: ActorRef, name: String)
   //Messaging

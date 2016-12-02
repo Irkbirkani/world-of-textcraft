@@ -1,4 +1,4 @@
-package TextMUD
+package mud
 import io.StdIn._
 import java.io.PrintStream
 import java.io.InputStream
@@ -37,7 +37,7 @@ object Main extends App {
           && clas.trim.toUpperCase != "MAGE"
           && clas.trim.toUpperCase != "ROGUE"
           && clas.trim.toUpperCase != "PRIEST") {
-          out.println(clas + " is not a class. Try again.")
+          out.println(clas.toLowerCase() + " is not a class. Try again.")
           clas = in.readLine().trim.toUpperCase()
         }
         clas match {

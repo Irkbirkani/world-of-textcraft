@@ -1,4 +1,4 @@
-package TextMUD
+package mud
 
 import akka.actor.ActorRef
 
@@ -17,7 +17,7 @@ class Priest extends Class {
 
   val abilitySpeed = 20
   val abilityPower = 3
-  val abilities = Map("Heal" -> 3)
+  val abilities = Map("Heal: heal a target" -> 3)
 
   val name = "Priest"
 

@@ -1,4 +1,4 @@
-package TextMUD
+package mud
 import scala.annotation.tailrec
 
 class BSTMap[A, B](eq: (A, A) => Int) extends scala.collection.mutable.Map[A, B] {

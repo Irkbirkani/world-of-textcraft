@@ -1,4 +1,4 @@
-package TextMUD
+package mud
 
 import akka.actor.Actor
 import akka.actor.Props

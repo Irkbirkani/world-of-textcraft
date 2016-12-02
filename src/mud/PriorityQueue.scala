@@ -1,4 +1,4 @@
-package TextMUD
+package mud
 
 trait PriorityQueue[A] {
 

@@ -1,4 +1,4 @@
-package TextMUD
+package mud
 
 import scala.reflect.ClassTag
 

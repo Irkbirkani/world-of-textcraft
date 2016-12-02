@@ -1,4 +1,4 @@
-package TextMUD
+package mud
 
 import akka.actor.ActorRef
 
@@ -10,13 +10,13 @@ class Mage extends Class {
   }
 
   def teleport(dest: String, pl: Player, pla: ActorRef) = {
-    if (pl.level < 1) pla ! Player.PrintMessage("Level not heigh ehough to teleport!")
+    if (pl.level < 10) pla ! Player.PrintMessage("Level not heigh ehough to teleport!")
     else Main.roomManager ! RoomManager.CheckExists(dest, pla)
   }
 
   val abilityPower = 3
   val abilitySpeed = 15
-  val abilities = Map("Teleport" -> 10)
+  val abilities = Map("Teleport: teleport to a specific room" -> 10)
 
   val name = "Mage"
 

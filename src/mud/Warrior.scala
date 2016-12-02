@@ -1,4 +1,4 @@
-package TextMUD
+package mud
 
 import akka.actor.ActorRef
 
@@ -11,13 +11,13 @@ class Warrior extends Class {
   }
 
   def stun(pl: Player, nm: String, pla: ActorRef) = {
-    if (pl.level < 1) pla ! Player.PrintMessage("Level too low to use stun!")
+    if (pl.level < 3) pla ! Player.PrintMessage("Level too low to use stun!")
     else pl.location ! Room.CheckInRoom("stun", nm, pla)
   }
 
   val abilityPower = 3
   val abilitySpeed = 20
-  val abilities = Map("Stun" -> 3)
+  val abilities = Map("Stun: stun your target for 3 seconds." -> 3)
 
   val name = "Warrior"
 
