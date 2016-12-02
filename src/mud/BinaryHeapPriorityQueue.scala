@@ -47,3 +47,18 @@ class BinaryHeapPriorityQueue[A: ClassTag](comp: (A, A) => Int) extends Priority
 
   def isEmpty: Boolean = end == 1
 }
+
+object BinaryHeapPriorityQueue extends App {
+
+  private def BHComp(a: Int, b: Int): Int = {
+    if (a == b) 0
+    else if (a < b) 1
+    else (-1)
+  }
+  
+  val queue = new BinaryHeapPriorityQueue[Int](BHComp)
+  
+  queue.enqueue(1)
+  queue.enqueue(5)
+  println(queue.dequeue())
+}

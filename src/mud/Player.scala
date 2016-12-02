@@ -117,7 +117,6 @@ class Player(
     case HealCmnd(pl) =>
       output.println("Healing " + pl.path.name)
       Main.activityManager ! ActivityManager.Enqueue(clas.abilitySpeed, SendHeal(pl))
-      println("enqueued heal")
     case SendHeal(c) =>
       val healAmnt = level * clas.abilityPower
       c ! ReceiveHeal(healAmnt)
@@ -399,8 +398,7 @@ class Player(
       output.println("You are now level " + level + "!")
       if (level % 2 != 0) {
         modifier += 1
-        println(mod)
-        println(_newLvlAt)
+        
       }
     }
   }
