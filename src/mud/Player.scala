@@ -111,7 +111,7 @@ class Player(
     case View(name) =>
       name ! Stats
     case Stats =>
-      sender ! PrintMessage("Level: " + level + "\nClass: " + clasName)
+      sender ! PrintMessage("Level: " + level + "\r\nClass: " + clasName)
     case SendExp(xp) =>
       addExp(xp)
     case HealCmnd(pl) =>
@@ -284,13 +284,13 @@ class Player(
     if (equipment.length == 0) {
       output.println("Nothing equipped.")
       output.println("Armor: " + (armor + clas.dmgReduc) +
-        "\nDamage: " + damage +
-        "\nSpeed: " + speed)
+        "\r\nDamage: " + damage +
+        "\r\nSpeed: " + speed)
     } else {
       equipment.foreach(c => output.println(c.bodyPart + ": " + c.item.name))
       output.println("Armor: " + (armor + clas.dmgReduc) +
-        "\nDamage: " + damage +
-        "\nSpeed: " + speed)
+        "\r\nDamage: " + damage +
+        "\r\nSpeed: " + speed)
     }
   }
 
@@ -489,11 +489,11 @@ class Player(
     else if ("gear".startsWith(in)) printEquipment
     else if ("character".startsWith(in)) {
       output.println(name +
-        "\nClass: " + clas.name +
-        "\nLocation: " + location.path.name +
-        "\nHealth: " + health +
-        "\nLevel: " + level +
-        "\nEXP till next level: " + (newLvlAt - exp))
+        "\r\nClass: " + clas.name +
+        "\r\nLocation: " + location.path.name +
+        "\r\nHealth: " + health +
+        "\r\nLevel: " + level +
+        "\r\nEXP till next level: " + (newLvlAt - exp))
     } //combat commands
     else if ("abilities".startsWith(in)) printAbilities
     else if (in.startsWith("view")) view(in.drop(5))

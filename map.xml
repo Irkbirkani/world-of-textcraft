@@ -1,15 +1,11 @@
 <rooms>
 	<room name="FirstRoom" keyword="FirstRoom">
-		<description>You are in the first Room.
-Exit to the east.
-=================
+		<description>You are in the first Room.Exit to the east.=================
 		</description>
 		<exits>,,SecondRoom,,,</exits>
 	</room>
 	<room name="SecondRoom" keyword="SecondRoom">
-		<description>You are in the second Room.
-Exits to the south, east, or west
-=================================
+		<description>You are in the second Room.Exits to the south, east, or west.=================================
 		</description>
 		<item name="sword" damage="5" speed="10" armor="0" food ="0" itype="hand">It Looks
 			Sharp
@@ -20,26 +16,20 @@ Exits to the south, east, or west
 		<exits>,FourthRoom,ThirdRoom,FirstRoom,,</exits>
 	</room>
 	<room name="ThirdRoom" keyword="ThirdRoom">
-		<description>You are in the Third Room.
-Exits to the south or west.
-===========================
+		<description>You are in the Third Room.Exits to the south or west.===========================
 		</description>
 		<npcs name="Muffin" level="100" health="1000" location="ThirdRoom" attack="50" armor="50" speed="30" desc="A cute Welsh Corgi!">
 			<item name="Sword of Power" damage="500" speed="3" armor="0" food="0" itype="twoHand" >The most powerful weapon in the game!</item></npcs>
 		<exits>,FifthRoom,,SecondRoom,,</exits>
 	</room>
 	<room name="FourthRoom" keyword="FourthRoom">
-		<description>You enter room number Four.
-Exits to the north, south, or west.
-===================================
+		<description>You enter room number Four.Exits to the north, south, or west.===================================
 		</description>
 		<item name="your bank balance" damage="0" speed="0" armor="0" food="0" itype="misc">you wish it were as high as your GPA.</item>
 		<exits>SecondRoom,SeventhRoom,,SixthRoom,,</exits>
 	</room>
 	<room name="FifthRoom" keyword="FifthRoom">
-		<description>The Fifth Room.
-Exits to the north, south, or west.
-===================================
+		<description>The Fifth Room.Exits to the north, south, or west.===================================
 		</description>
 		<item name="sword" damage="5" speed="10" armor="0" food ="0" itype="hand">It Looks
 			Sharp
@@ -50,16 +40,12 @@ Exits to the north, south, or west.
 		<exits>ThirdRoom,NinthRoom,,SeventhRoom,,</exits>
 	</room>
 	<room name="SixthRoom" keyword="SixthRoom">
-		<description>The Sixth Room.
-Exit to the east.
-=================
+		<description>The Sixth Room.Exit to the east.=================
 		</description>
 		<exits>,,FourthRoom,,,</exits>
 	</room>
 	<room name="SeventhRoom" keyword="SeventhRoom">
-		<description>The Crossroads of the rooms.
-Exits to the north, south, east, or west.
-=========================================
+		<description>The Crossroads of the rooms.Exits to the north, south, east, or west.=========================================
 		</description>
 		<item name="thing" damage="15" speed="35" armor="0" food ="0" itype="twoHand">The
 			most amazing thing you ever did see
@@ -67,16 +53,12 @@ Exits to the north, south, east, or west.
 		<exits>FourthRoom,NinthRoom,FifthRoom,EighthRoom,,</exits>
 	</room>
 	<room name="EighthRoom" keyword="EighthRoom">
-		<description>Room Numero Ocho.
-Salida a east.
-==============
+		<description>Room Numero Ocho.Salida a east.==============
 		</description>
 		<exits>,,SeventhRoom,,,</exits>
 	</room>
 	<room name="NinthRoom" keyword="NinthRoom">
-		<description>The Second Highest room number.
-Exit north.
-===========
+		<description>The Second Highest room number.Exit north.===========
 		</description>
 		<item name="hat" damage="0" speed="0" armor="5" food ="0" itype="head">its pretty rad looking.</item>
 		<item name="ball" damage="2" speed="1" armor="0" food ="0" itype="offHand">it might be a soccer ball?</item>
@@ -87,9 +69,7 @@ Exit north.
 		<exits>SeventhRoom,,,,,,</exits>
 	</room>
 	<room name="TenthRoom" keyword="TenthRoom">
-		<description>The last Room.
-Exit north.
-===========
+		<description>The last Room.Exit north.===========
 		</description>
 		<exits>FifthRoom,,,,,</exits>
 	</room>

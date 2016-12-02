@@ -8,7 +8,7 @@ import scala.Console._
 class Room(
     keyword: String,
     val name: String,
-    val description: String,
+    val description: List[String],
     private var _items: MutableDLList[Item],
     private val exits: List[String]) extends Actor {
 
@@ -80,10 +80,10 @@ class Room(
 
   //Print Description
   def printDescription(): String = {
-    s"${RESET}${CYAN}$name\n$description${RESET}" +
-      s"${RESET}${GREEN}\nYou see: \n" +
-      { GREEN } + (if (items.length == 0) "nothing" else (for (i <- 0 until items.length) yield (items(i).name)).mkString("\n")) + "\n========" + { RESET } +
-      { RESET } + { YELLOW } + "\nPlayers in room: \n" + chars.filter(_._2 == false).map(_._1.path.name).mkString("\n") + "\n========== " + { RESET }
+    { RESET } + { CYAN } + name + "\r\n" + description.map(a => a + "\r\n").mkString +
+      s"${RESET}${GREEN}You see: \r\n" +
+      { GREEN } + (if (items.length == 0) "nothing" else (for (i <- 0 until items.length) yield (items(i).name)).mkString("\r\n")) + "\r\n========" + { RESET } +
+      { RESET } + { YELLOW } + "\r\nPlayers in room: \r\n" + chars.filter(_._2 == false).map(_._1.path.name).mkString("\r\n") + "\r\n========== " + { RESET }
   }
 
   //Room Exit Management
@@ -144,7 +144,7 @@ object Room {
   def apply(n: xml.Node): Room = {
     val keyword = (n \ "@keyword").text
     val name = (n \ "@name").text
-    val description = (n \ "description").text
+    val description = (n \ "description").text.trim.split("""\.""").toList
     (n \ "npcs").map { npc => NPC(npc) }
     val item = new MutableDLList[Item]()
     (n \ "item").map { inode => Item(inode) }.toList.foreach(_ +=: item)

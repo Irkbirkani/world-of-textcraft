@@ -27,10 +27,10 @@ object Main extends App {
       val in = new BufferedReader(new InputStreamReader(sock.getInputStream))
       val out = new PrintStream(sock.getOutputStream)
       Future {
-        out.println("What is your name?\nNo spaces. Letters only.")
+        out.println("What is your name?\r\nNo spaces. Letters only.")
         var name = (in.readLine().trim).filter(x => x.isLetter || x.isWhitespace).replaceAll(" ", "_")
 
-        out.println("Choose a Class.\nWarrior\nMage\nRogue\nPriest")
+        out.println("Choose a Class.\r\nWarrior\r\nMage\r\nRogue\r\nPriest")
         var clas = in.readLine().trim.toUpperCase()
         var cls: Class = null
         while (clas.trim.toUpperCase != "WARRIOR"
