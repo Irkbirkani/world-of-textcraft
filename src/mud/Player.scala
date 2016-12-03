@@ -160,10 +160,14 @@ class Player(
     case StunCD =>
       stunCD = false
     case StartTeleport(rm) =>
+      if (teleCD){
+        output.println("Teleport on cooldown!")
+      } else {
       output.println("Teleporting to " + rm + "!")
       teleCD = true
       Main.activityManager ! Enqueue(100, Teleport(rm))
       Main.activityManager ! Enqueue(600, TeleCD)
+      }
     case Teleport(rm) =>
       Main.roomManager ! RoomManager.EnterRoom(rm, self)
     case TeleCD =>
@@ -192,17 +196,22 @@ class Player(
     case Unpoison =>
       poisoned = false
     case Sneak =>
-      sneaking = true
-      sneakCD = true
-      output.println("You are sneaking!")
-      Main.activityManager ! Enqueue(600, Unsneak)
-      Main.activityManager ! Enqueue(600, SneakCD)
+      if (sneakCD) {
+        output.println("Sneak on cooldown")
+      } else {
+        sneaking = true
+        sneakCD = true
+        output.println("You are sneaking!")
+        Main.activityManager ! Enqueue(600, Unsneak)
+        Main.activityManager ! Enqueue(600, SneakCD)
+      }
     case Unsneak =>
       if (sneaking) output.println("You are no longer sneaking!")
       sneaking = false
       location ! Room.Unstealth(self)
     case SneakCD =>
       sneakCD = false
+      output.println("Sneak off cooldown!")
   }
 
   //Inventory Management
