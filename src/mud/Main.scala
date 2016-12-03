@@ -27,11 +27,11 @@ object Main extends App {
       val sock = ss.accept()
       val in = new BufferedReader(new InputStreamReader(sock.getInputStream))
       val out = new PrintStream(sock.getOutputStream)
-      makeName(in, out, sock)
+      makePlayer(in, out, sock)
     }
   }
 
-  def makeName(in: BufferedReader, out: PrintStream, sock: Socket) = {
+  def makePlayer(in: BufferedReader, out: PrintStream, sock: Socket) = {
     def nameCheck(name: String): Boolean = {
       name.length < 3 || name.contains(" ")
     }

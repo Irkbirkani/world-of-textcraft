@@ -51,9 +51,10 @@ class Player(
     case TakeExit(dir) =>
       dir match {
         case Some(dest) =>
-          if (_location != null) location ! Room.LeaveRoom(self, name, sneaking)
+          if (_location != null) location ! Room.LeaveRoom(self, makeFstCap(name), sneaking)
           _location = dest
-          location ! Room.EnterRoom(self, name, sneaking)
+          changeLoc(self, dest)
+          location ! Room.EnterRoom(self, makeFstCap(name), sneaking)
           location ! Room.PrintDescription
         case None =>
           output.println("You can't go that way")
@@ -160,13 +161,13 @@ class Player(
     case StunCD =>
       stunCD = false
     case StartTeleport(rm) =>
-      if (teleCD){
+      if (teleCD) {
         output.println("Teleport on cooldown!")
       } else {
-      output.println("Teleporting to " + rm + "!")
-      teleCD = true
-      Main.activityManager ! Enqueue(100, Teleport(rm))
-      Main.activityManager ! Enqueue(600, TeleCD)
+        output.println("Teleporting to " + rm + "!")
+        teleCD = true
+        Main.activityManager ! Enqueue(100, Teleport(rm))
+        Main.activityManager ! Enqueue(600, TeleCD)
       }
     case Teleport(rm) =>
       Main.roomManager ! RoomManager.EnterRoom(rm, self)
@@ -212,6 +213,23 @@ class Player(
     case SneakCD =>
       sneakCD = false
       output.println("Sneak off cooldown!")
+    case SendInvite(pl, loc) =>
+      output.println(makeFstCap(pl.path.name) + " invited you to a group. y/_")
+      val in = input.readLine
+      if ("yes".startsWith(in)) {
+        output.println("You joined the group")
+        pl ! Player.AcceptInvite(self, location)
+        println("sent AcceptInvite")
+        addMember(pl, loc)
+      } else sender ! Player.PrintMessage(s"$name declined your invatation")
+    case AcceptInvite(pl, loc) =>
+      println("Recieve accept invite")
+      party.foreach(a => a._1 ! Player.PrintMessage(makeFstCap(pl.path.name) + " joined the group."))
+      addMember(pl, loc)
+    case ChangeLoc(pl, loc) =>
+      changeLoc(pl, loc)
+    case RemoveMember(pl) =>
+      rmvMember(pl)
   }
 
   //Inventory Management
@@ -442,6 +460,32 @@ class Player(
 
   def pvpXP = level * modifier * 2
 
+  //Party Management
+  //party keeps a map of Player->Location
+  private var _party: scala.collection.mutable.Map[ActorRef, ActorRef] = scala.collection.mutable.Map(self -> location)
+
+  def party = _party
+
+  def changeLoc(pl: ActorRef, newLoc: ActorRef) = {
+    _party(pl) = newLoc
+    party.filter(p => p != (self -> location)).foreach(a => a._1 ! ChangeLoc(pl, newLoc))
+  }
+
+  def addMember(pl: ActorRef, loc: ActorRef) = {
+    _party += (pl -> loc)
+  }
+
+  def rmvMember(pl: ActorRef) = {
+    _party = _party.filter(p => p._1 != pl)
+    party.foreach(p => p._1 ! PrintMessage( makeFstCap(pl.path.name) + " left the group."))
+  }
+
+  def printParty = {
+    for (p <- party) {
+      output.print(makeFstCap(p._1.path.name) + " is at " + p._2.path.name + ".\r\n")
+    }
+  }
+
   //Combat Management
   private var victim: Option[ActorRef] = None
 
@@ -492,14 +536,17 @@ class Player(
     val Array(_, to, msg) = s.split(" +", 3)
     Main.playerManager ! PlayerManager.PrintTellMessage(to, name, msg)
   }
+
   def makeFstCap(name: String): String = {
-    name.substring(0, 1) + name.substring(1).toLowerCase()
+    name.substring(0, 1).toUpperCase + name.substring(1).toLowerCase()
   }
+
   //Process Player Input
   def processCommand(in: String) = {
     //player quit
     if ("quit".startsWith(in)) {
       sock.close()
+      party.foreach(p => p._1 ! RemoveMember(self))
       location ! Room.LeaveGame(self, name)
     } //player movement
     else if ("north".startsWith(in)) move(0)
@@ -546,6 +593,9 @@ class Player(
       Main.playerManager ! PlayerManager.PrintShoutMessage(in.drop(6), name)
     } else if (in.startsWith("say")) location ! Room.SayMessage(in.drop(4), name)
     else if (in.startsWith("tell")) tellMessage(in)
+    //party commands
+    else if (in.startsWith("invite")) Main.playerManager ! PlayerManager.CheckPlayerExist(in.drop(7), location)
+    else if ("party".startsWith(in)) printParty
     //help command
     else if ("help".startsWith(in)) {
       val source = Source.fromFile("help.txt")
@@ -562,7 +612,14 @@ class Player(
 object Player {
   case object ProcessInput
   case class PrintMessage(msg: String)
+
   case class AddToInventory(item: Option[Item])
+
+  case class SendInvite(pl: ActorRef, loc: ActorRef)
+  case class AcceptInvite(pl: ActorRef, loc: ActorRef)
+  case class ChangeLoc(pl: ActorRef, loc: ActorRef)
+  case class RemoveMember(pl: ActorRef)
+
   case class StartTeleport(rm: String)
   case class Teleport(rm: String)
   case object Sneak
