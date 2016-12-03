@@ -213,23 +213,26 @@ class Player(
     case SneakCD =>
       sneakCD = false
       output.println("Sneak off cooldown!")
-    case SendInvite(pl, loc) =>
+    case SendInvite(pl, pt) =>
       output.println(makeFstCap(pl.path.name) + " invited you to a group. y/_")
       val in = input.readLine
       if ("yes".startsWith(in)) {
         output.println("You joined the group")
         pl ! Player.AcceptInvite(self, location)
-        println("sent AcceptInvite")
-        addMember(pl, loc)
+        addParty(pt)
       } else sender ! Player.PrintMessage(s"$name declined your invatation")
     case AcceptInvite(pl, loc) =>
-      println("Recieve accept invite")
-      party.foreach(a => a._1 ! Player.PrintMessage(makeFstCap(pl.path.name) + " joined the group."))
+      party.filter(p => p._1 != pl && p._1 != self).foreach(p => p._1 ! AddMember(pl, loc))
+      output.println(makeFstCap(pl.path.name) + " joined the group.")
       addMember(pl, loc)
-    case ChangeLoc(pl, loc) =>
-      changeLoc(pl, loc)
+    case AddMember(pl, loc) =>
+      addMember(pl, loc)
+      output.println(makeFstCap(pl.path.name) + " joined the group.")
+    case ChangeLoc(pl, newLoc) =>
+      _party(pl) = newLoc
     case RemoveMember(pl) =>
       rmvMember(pl)
+      output.println((makeFstCap(pl.path.name) + " left the group."))
   }
 
   //Inventory Management
@@ -462,28 +465,41 @@ class Player(
 
   //Party Management
   //party keeps a map of Player->Location
-  private var _party: scala.collection.mutable.Map[ActorRef, ActorRef] = scala.collection.mutable.Map(self -> location)
+  import scala.collection.mutable
+  private var _party: mutable.Map[ActorRef, ActorRef] = mutable.Map(self -> location)
 
   def party = _party
 
   def changeLoc(pl: ActorRef, newLoc: ActorRef) = {
-    _party(pl) = newLoc
-    party.filter(p => p != (self -> location)).foreach(a => a._1 ! ChangeLoc(pl, newLoc))
+    party.foreach(a => a._1 ! ChangeLoc(pl, newLoc))
+  }
+
+  def addParty(newParty: mutable.Map[ActorRef, ActorRef]) = {
+    _party = party ++ newParty
   }
 
   def addMember(pl: ActorRef, loc: ActorRef) = {
     _party += (pl -> loc)
   }
 
+  def leaveParty = {
+    party.filter(_ != (self -> location)).foreach(p => p._1 ! RemoveMember(self))
+    output.println("You left the group.")
+    _party = scala.collection.mutable.Map(self -> location)
+  }
+
   def rmvMember(pl: ActorRef) = {
     _party = _party.filter(p => p._1 != pl)
-    party.foreach(p => p._1 ! PrintMessage( makeFstCap(pl.path.name) + " left the group."))
   }
 
   def printParty = {
     for (p <- party) {
       output.print(makeFstCap(p._1.path.name) + " is at " + p._2.path.name + ".\r\n")
     }
+  }
+
+  def partyChat(msg: String) = {
+    party.filter(p => p._1 != self).foreach(p => p._1 ! PrintMessage({ RESET } + { GREEN } + name + ": " + msg + { RESET }))
   }
 
   //Combat Management
@@ -545,9 +561,9 @@ class Player(
   def processCommand(in: String) = {
     //player quit
     if ("quit".startsWith(in)) {
-      sock.close()
-      party.foreach(p => p._1 ! RemoveMember(self))
+      leaveParty
       location ! Room.LeaveGame(self, name)
+      sock.close()
     } //player movement
     else if ("north".startsWith(in)) move(0)
     else if ("south".startsWith(in)) move(1)
@@ -594,8 +610,10 @@ class Player(
     } else if (in.startsWith("say")) location ! Room.SayMessage(in.drop(4), name)
     else if (in.startsWith("tell")) tellMessage(in)
     //party commands
-    else if (in.startsWith("invite")) Main.playerManager ! PlayerManager.CheckPlayerExist(in.drop(7), location)
+    else if (in.startsWith("invite")) Main.playerManager ! PlayerManager.CheckPlayerExist(in.drop(7), party)
     else if ("party".startsWith(in)) printParty
+    else if (in.startsWith("leave")) leaveParty
+    else if (in.startsWith("/p")) partyChat(in.drop(3))
     //help command
     else if ("help".startsWith(in)) {
       val source = Source.fromFile("help.txt")
@@ -615,8 +633,9 @@ object Player {
 
   case class AddToInventory(item: Option[Item])
 
-  case class SendInvite(pl: ActorRef, loc: ActorRef)
+  case class SendInvite(pl: ActorRef, pt: scala.collection.mutable.Map[ActorRef, ActorRef])
   case class AcceptInvite(pl: ActorRef, loc: ActorRef)
+  case class AddMember(pl: ActorRef, loc: ActorRef)
   case class ChangeLoc(pl: ActorRef, loc: ActorRef)
   case class RemoveMember(pl: ActorRef)
 

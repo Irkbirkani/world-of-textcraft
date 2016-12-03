@@ -30,9 +30,11 @@ class PlayerManager extends Actor {
         case Some(pl) => pl ! Player.PrintMessage(s"${RESET}${BLUE}$from: $msg${RESET}")
         case None => sender ! Player.PrintMessage(s"Player $to does not exist.")
       }
-    case CheckPlayerExist(pl, loc) =>
+    case CheckPlayerExist(pl, pt) =>
       context.child(pl.toUpperCase) match {
-        case Some(p) => p ! Player.SendInvite(sender, loc)
+        case Some(p) =>
+          if (p != sender) p ! Player.SendInvite(sender, pt)
+          else sender ! Player.PrintMessage("You cannot invite yourself to a party.")
         case None => sender ! Player.PrintMessage(s"Player $pl does not exist.")
       }
   }
@@ -46,5 +48,5 @@ object PlayerManager {
   //Messaging Management
   case class PrintShoutMessage(msg: String, name: String)
   case class PrintTellMessage(to: String, from: String, msg: String)
-  case class CheckPlayerExist(pl: String, loc: ActorRef)
+  case class CheckPlayerExist(pl: String, party: scala.collection.mutable.Map[ActorRef, ActorRef])
 }

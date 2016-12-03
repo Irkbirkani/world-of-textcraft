@@ -88,7 +88,7 @@ class Room(
   }
 
   def makeFstCap(name: String): String = {
-    name.substring(0, 1) + name.substring(1).toLowerCase()
+    name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase()
   }
 
   //Room Exit Management
