@@ -23,6 +23,7 @@ class Player(
 
   import Player._
   import Character._
+  import ActivityManager._
 
   //location access
   private var _location: ActorRef = null
@@ -66,8 +67,8 @@ class Player(
         output.println("You cannot kill yourself.")
         victim = None
       } else {
-        output.println("You are hitting " + c.path.name)
-        Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
+        output.println("You are hitting " + makeFstCap(c.path.name))
+        Main.activityManager ! Enqueue(speed, AttackNow)
       }
     case AttackNow =>
       if (isAlive && !stunned) {
@@ -77,24 +78,24 @@ class Player(
       if (loc == location) {
         val realDamage = takeDamage(dmg)
         sender ! DamageTaken(realDamage, isAlive, health.toInt)
-        output.println(sender.path.name + " dealt " + realDamage + " damage! Health is at " + health)
+        output.println(makeFstCap(sender.path.name) + " dealt " + realDamage + " damage! Health is at " + health)
         if (!isAlive) {
           clearInventory
           location ! Room.HasDied(self, name)
           sender ! ResetVictim
           sender ! SendExp(pvpXP)
           victim = None
-          Main.activityManager ! ActivityManager.Enqueue(50, ResetChar)
+          Main.activityManager ! Enqueue(50, ResetChar)
         } else if (victim.isEmpty) {
           victim = Some(sender)
-          Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
+          Main.activityManager ! Enqueue(speed, AttackNow)
         }
       } else {
         sender ! PrintMessage("You are having a hard time finding them.")
       }
     case DamageTaken(dmg, alive, hp) =>
       if (alive && victim.nonEmpty) {
-        output.println("You dealt " + dmg + " damage to " + victim.get.path.name + "! " +
+        output.println("You dealt " + dmg + " damage to " + makeFstCap(victim.get.path.name) + "! " +
           victim.get.path.name + " has " + hp + " health left!")
         kill(victim.get.path.name)
       } else if (victim.nonEmpty) {
@@ -115,40 +116,58 @@ class Player(
     case SendExp(xp) =>
       addExp(xp)
     case HealCmnd(pl) =>
-      output.println("Healing " + pl.path.name)
-      Main.activityManager ! ActivityManager.Enqueue(clas.abilitySpeed, SendHeal(pl))
+      if (healCD) {
+        output.println("Heal on Cooldown")
+      } else {
+        output.println("Healing " + pl.path.name)
+        healCD = true
+        Main.activityManager ! Enqueue(clas.abilitySpeed, SendHeal(pl))
+        Main.activityManager ! Enqueue(50, HealCD)
+      }
     case SendHeal(c) =>
       val healAmnt = level * clas.abilityPower
       c ! ReceiveHeal(healAmnt)
     case ReceiveHeal(hl) =>
       addHlth(hl)
       output.println("Healed for " + hl + "!")
-      sender ! Player.PrintMessage("Healed " + name + " for " + hl + "!")
+      sender ! Player.PrintMessage("Healed " + makeFstCap(name) + " for " + hl + "!")
+    case HealCD =>
+      healCD = false
     case StunCmnd(c) =>
       victim = Some(c)
       if (victim.get == self) {
         output.println("You cannot stun yourself.")
         victim = None
+      } else if (stunCD) {
+        output.println("Stun is on cooldown.")
       } else {
-        output.println("You stunned " + c.path.name)
-        Main.activityManager ! ActivityManager.Enqueue(speed, SendStun(victim.get))
+        output.println("You stunned " + makeFstCap(c.path.name))
+        Main.activityManager ! Enqueue(speed, SendStun(victim.get))
+        stunCD = true
+        Main.activityManager ! Enqueue(80, StunCD)
         kill(victim.get.path.name)
       }
     case SendStun(c) =>
       c ! Stun(self)
     case Stun(c) =>
       stunned = true
-      Main.activityManager ! ActivityManager.Enqueue(30, Unstun(c))
+      Main.activityManager ! Enqueue(30, Unstun(c))
       output.println("You've been stunned!")
     case Unstun(c) =>
       stunned = false
       output.println("You're no longer stunned!")
       kill(c.path.name)
+    case StunCD =>
+      stunCD = false
     case StartTeleport(rm) =>
       output.println("Teleporting to " + rm + "!")
-      Main.activityManager ! ActivityManager.Enqueue(100, Player.Teleport(rm))
+      teleCD = true
+      Main.activityManager ! Enqueue(100, Teleport(rm))
+      Main.activityManager ! Enqueue(600, TeleCD)
     case Teleport(rm) =>
       Main.roomManager ! RoomManager.EnterRoom(rm, self)
+    case TeleCD =>
+      teleCD = false
     case PoisonCmnd(c) =>
       victim = Some(c)
       if (victim.get == self) {
@@ -156,7 +175,7 @@ class Player(
         victim = None
       } else {
         output.println("You poisoned " + c.path.name)
-        Main.activityManager ! ActivityManager.Enqueue(speed, SendPoison(c, clas.abilityPower * level))
+        Main.activityManager ! Enqueue(speed, SendPoison(c, clas.abilityPower * level))
         kill(victim.get.path.name)
       }
     case SendPoison(c, dmg) =>
@@ -169,17 +188,21 @@ class Player(
         output.println("Poison did " + dmg + " damage!")
         poison(dmg)
       }
-      Main.activityManager ! ActivityManager.Enqueue(100, Unpoison)
+      Main.activityManager ! Enqueue(100, Unpoison)
     case Unpoison =>
       poisoned = false
     case Sneak =>
       sneaking = true
+      sneakCD = true
       output.println("You are sneaking!")
-      Main.activityManager ! ActivityManager.Enqueue(600, Unsneak)
+      Main.activityManager ! Enqueue(600, Unsneak)
+      Main.activityManager ! Enqueue(600, SneakCD)
     case Unsneak =>
       if (sneaking) output.println("You are no longer sneaking!")
       sneaking = false
       location ! Room.Unstealth(self)
+    case SneakCD =>
+      sneakCD = false
   }
 
   //Inventory Management
@@ -327,6 +350,11 @@ class Player(
     clas.abilities.foreach(a => output.println(a._1 + ": available at level " + a._2))
   }
 
+  var stunCD = false
+  var teleCD = false
+  var sneakCD = false
+  var healCD = false
+
   //Health Management
   val baseHlth = playerHealth + clas.hlthInc
   def health = _health
@@ -339,7 +367,7 @@ class Player(
   def rmvHlth(dmg: Int) = {
     val newHlth = health - dmg
     if (newHlth <= 0) {
-      Main.activityManager ! ActivityManager.Enqueue(50, ResetChar)
+      Main.activityManager ! Enqueue(50, ResetChar)
     } else _health -= dmg
   }
 
@@ -398,7 +426,7 @@ class Player(
       output.println("You are now level " + level + "!")
       if (level % 2 != 0) {
         modifier += 1
-        
+
       }
     }
   }
@@ -417,14 +445,14 @@ class Player(
     var count = 3
     while (poisoned) {
       if (count == 0) {
-        Main.activityManager ! ActivityManager.Enqueue(20, Poisoned(dmg))
+        Main.activityManager ! Enqueue(20, Poisoned(dmg))
         count = 3
       } else count -= 1
     }
   }
 
   def kill(pl: String): Unit = {
-    location ! Room.CheckInRoom("kill", pl, self)
+    location ! Room.CheckInRoom("kill", pl.toUpperCase(), self)
   }
 
   def d6 = util.Random.nextInt(6) + 1
@@ -443,7 +471,7 @@ class Player(
   }
 
   def view(name: String) = {
-    location ! Room.CheckInRoom("view", name, self)
+    location ! Room.CheckInRoom("view", name.toUpperCase(), self)
   }
 
   def shortPath(room: String) = {
@@ -455,7 +483,9 @@ class Player(
     val Array(_, to, msg) = s.split(" +", 3)
     Main.playerManager ! PlayerManager.PrintTellMessage(to, name, msg)
   }
-
+  def makeFstCap(name: String): String = {
+    name.substring(0, 1) + name.substring(1).toLowerCase()
+  }
   //Process Player Input
   def processCommand(in: String) = {
     //player quit
@@ -528,6 +558,10 @@ object Player {
   case class Teleport(rm: String)
   case object Sneak
   case object Unsneak
+  case object StunCD
+  case object HealCD
+  case object TeleCD
+  case object SneakCD
 
   val startLvl = 1
 

@@ -11,8 +11,8 @@ class Warrior extends Class {
   }
 
   def stun(pl: Player, nm: String, pla: ActorRef) = {
-    if (pl.level < 3) pla ! Player.PrintMessage("Level too low to use stun!")
-    else pl.location ! Room.CheckInRoom("stun", nm, pla)
+    if (pl.level < 1) pla ! Player.PrintMessage("Level too low to use stun!")
+    else pl.location ! Room.CheckInRoom("stun", nm.toUpperCase(), pla)
   }
 
   val abilityPower = 3

@@ -58,9 +58,9 @@ class Room(
     case SayMessage(msg, name) =>
       chars.foreach(p => p._1 ! Player.PrintMessage(s"${RESET}${MAGENTA}$name: $msg${RESET}"))
     case CheckInRoom(cmd, pl, ar) =>
-      val ch = chars.filter(_._1.path.name == pl).map(x => x._1)
+      val ch = chars.filter(c => c._1.path.name == pl).map(x => x._1)
       if (ch.length == 0) {
-        sender ! Player.PrintMessage("Invalid Target")
+        ar ! Player.PrintMessage("Invalid Target")
       } else cmd match {
         case "kill" =>
           ar ! KillCmnd(ch(0))
@@ -73,6 +73,7 @@ class Room(
         case "poison" =>
           ar ! PoisonCmnd(ch(0))
         case _ =>
+          ar ! Player.PrintMessage("Unknown command")
           println("Unknown command sent.")
       }
 
@@ -82,8 +83,12 @@ class Room(
   def printDescription(): String = {
     { RESET } + { CYAN } + name + "\r\n" + description.map(a => a + "\r\n").mkString +
       s"${RESET}${GREEN}You see: \r\n" +
-      { GREEN } + (if (items.length == 0) "nothing" else (for (i <- 0 until items.length) yield (items(i).name)).mkString("\r\n")) + "\r\n========" + { RESET } +
-      { RESET } + { YELLOW } + "\r\nPlayers in room: \r\n" + chars.filter(_._2 == false).map(_._1.path.name).mkString("\r\n") + "\r\n========== " + { RESET }
+      { GREEN } + (if (items.length == 0) "nothing" else (for (i <- 0 until items.length) yield (items(i).name)).mkString("\r\n")) + "\r\n========" +
+      { RESET } + { YELLOW } + "\r\nPlayers in room: \r\n" + chars.filter(_._2 == false).map(n => makeFstCap(n._1.path.name)).mkString("\r\n") + "\r\n========== " + { RESET }
+  }
+
+  def makeFstCap(name: String): String = {
+    name.substring(0, 1) + name.substring(1).toLowerCase()
   }
 
   //Room Exit Management

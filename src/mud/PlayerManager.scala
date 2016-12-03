@@ -16,11 +16,11 @@ class PlayerManager extends Actor {
     case CheckInput =>
       context.children.foreach(_ ! Player.ProcessInput)
     case NewPlayer(name, clas, lvl, health, loc, inv, in, out, sock) =>
-      if (context.child(name).nonEmpty) {
+      if (context.child(name.toUpperCase()).nonEmpty) {
         out.println("Name taken.")
-        sock.close
+        Main.makeName(in, out, sock)
       } else {
-        val p = context.actorOf(Props(new Player(name, clas, lvl, health, inv, in, out, sock)), name)
+        val p = context.actorOf(Props(new Player(name, clas, lvl, health, inv, in, out, sock)), name.toUpperCase())
         Main.roomManager ! RoomManager.EnterRoom(loc, p)
       }
     case PrintShoutMessage(msg, name) =>

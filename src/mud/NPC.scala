@@ -83,8 +83,8 @@ class NPC(val name: String,
       name ! Stats
     case Stats =>
       sender ! Player.PrintMessage(name + ": " + desc +
-        "\nLevel: " + level +
-        "\nHealth: " + health)
+        "\r\nLevel: " + level +
+        "\r\nHealth: " + health)
     case ReceiveHeal(hl) =>
       addHlth(hl)
       sender ! Player.PrintMessage("Healed " + name + " for " + hl + "!")
