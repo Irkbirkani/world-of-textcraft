@@ -97,7 +97,7 @@ class Player(
     case DamageTaken(dmg, alive, hp) =>
       if (alive && victim.nonEmpty) {
         output.println("You dealt " + dmg + " damage to " + makeFstCap(victim.get.path.name) + "! " +
-          victim.get.path.name + " has " + hp + " health left!")
+          makeFstCap(victim.get.path.name) + " has " + hp + " health left!")
         kill(victim.get.path.name)
       } else if (victim.nonEmpty) {
         output.println("you killed " + victim.get.path.name + ".")
@@ -115,6 +115,8 @@ class Player(
     case Stats =>
       sender ! PrintMessage("Level: " + level + "\r\nClass: " + clasName)
     case SendExp(xp) =>
+      party.filter(p => p._2 == location).foreach(p => p._1 ! AddExp(xp))
+    case AddExp(xp) =>
       addExp(xp)
     case HealCmnd(pl) =>
       if (healCD) {
@@ -214,13 +216,15 @@ class Player(
       sneakCD = false
       output.println("Sneak off cooldown!")
     case SendInvite(pl, pt) =>
-      output.println(makeFstCap(pl.path.name) + " invited you to a group. y/_")
-      val in = input.readLine
-      if ("yes".startsWith(in)) {
-        output.println("You joined the group")
-        pl ! Player.AcceptInvite(self, location)
-        addParty(pt)
-      } else sender ! Player.PrintMessage(s"$name declined your invatation")
+      if (party.size == 1) {
+        output.println(makeFstCap(pl.path.name) + " invited you to a group. y/_")
+        val in = input.readLine
+        if ("yes".startsWith(in)) {
+          output.println("You joined the group")
+          pl ! Player.AcceptInvite(self, location)
+          addParty(pt)
+        } else sender ! Player.PrintMessage(s"$name declined your invatation.")
+      } else sender ! PrintMessage(s"$name is already in a group.")
     case AcceptInvite(pl, loc) =>
       party.filter(p => p._1 != pl && p._1 != self).foreach(p => p._1 ! AddMember(pl, loc))
       output.println(makeFstCap(pl.path.name) + " joined the group.")
@@ -610,8 +614,11 @@ class Player(
     } else if (in.startsWith("say")) location ! Room.SayMessage(in.drop(4), name)
     else if (in.startsWith("tell")) tellMessage(in)
     //party commands
-    else if (in.startsWith("invite")) Main.playerManager ! PlayerManager.CheckPlayerExist(in.drop(7), party)
-    else if ("party".startsWith(in)) printParty
+    else if (in.startsWith("invite")) {
+      if (party.filter(p => p._1.path.name != in.drop(7).toUpperCase()).size == 0) {
+        Main.playerManager ! PlayerManager.CheckPlayerExist(in.drop(7), party)
+      } else output.println("Player is already in a group.")
+    } else if ("party".startsWith(in)) printParty
     else if (in.startsWith("leave")) leaveParty
     else if (in.startsWith("/p")) partyChat(in.drop(3))
     //help command
@@ -632,6 +639,8 @@ object Player {
   case class PrintMessage(msg: String)
 
   case class AddToInventory(item: Option[Item])
+
+  case class AddExp(xp: Int)
 
   case class SendInvite(pl: ActorRef, pt: scala.collection.mutable.Map[ActorRef, ActorRef])
   case class AcceptInvite(pl: ActorRef, loc: ActorRef)
