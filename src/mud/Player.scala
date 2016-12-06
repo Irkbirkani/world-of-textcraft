@@ -63,9 +63,11 @@ class Player(
       victim = Some(c)
       if (sneaking) {
         self ! Unsneak
-      }
-      if (victim.get == self) {
+      } else if (victim.get == self) {
         output.println("You cannot kill yourself.")
+        victim = None
+      } else if (party.contains(c)) {
+        output.println("You cannot attack a party member.")
         victim = None
       } else {
         output.println("You are hitting " + makeFstCap(c.path.name))
@@ -216,6 +218,8 @@ class Player(
       sneakCD = false
       output.println("Sneak off cooldown!")
     case SendInvite(pl, pt) =>
+      //TODO refactor to use a "flag" or "mode" system to remove blocking call.
+      
       println(party.size)
       if (party.size <= 1) {
         output.println(makeFstCap(pl.path.name) + " invited you to a group. y/_")

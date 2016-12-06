@@ -12,7 +12,7 @@ import java.io.InputStreamReader
 import java.net.Socket
 
 object Main extends App {
-  //Initializes system, Player Manager, and Room Manager
+  //Initializes system, Player Manager, Room Manager, NPC Manager, and Activity Manager
   val system = ActorSystem("Main")
   val playerManager = system.actorOf(Props[PlayerManager], "PlayerManager")
   val roomManager = system.actorOf(Props[RoomManager], "RoomManager")
@@ -39,7 +39,7 @@ object Main extends App {
       out.println("What is your name?\r\n3 or more characters. Letters only.")
       var name = (in.readLine().trim).filter(x => x.isLetter)
       while (nameCheck(name)) {
-        out.println("Name to short. Try again.")
+        out.println("Invalid name. Try again.")
         name = (in.readLine().trim).filter(x => x.isLetter)
       }
       out.println("Choose a Class.\r\nWarrior\r\nMage\r\nRogue\r\nPriest")
