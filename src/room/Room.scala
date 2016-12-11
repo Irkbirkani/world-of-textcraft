@@ -44,7 +44,7 @@ class Room(
       }
       removePlayer(pl)
     case LeaveGame(pl, name) =>
-      chars.foreach(p => p._1 ! Player.PrintMessage(name + " left the game."))
+      chars.foreach(p => p._1 ! Player.PrintMessage(makeFstCap(name) + " left the game."))
       removePlayer(pl)
     case Unstealth(pl) =>
       _chars.find(_._1 == pl) match {
@@ -52,7 +52,6 @@ class Room(
           p._2 == false
         case None =>
           println("None called on Room.Unstealth")
-
       }
     case HasDied(pl, name) =>
       chars.foreach(p => p._1 ! Player.PrintMessage(name + " has died!"))

@@ -31,7 +31,7 @@ class PlayerManager extends Actor {
     case PrintShoutMessage(msg, name) =>
       context.children.foreach(_ ! Player.PrintMessage(s"${RESET}${RED}$name shouts: $msg${RESET}"))
     case PrintTellMessage(to, from, msg) =>
-      context.child(to) match {
+      context.child(to.toUpperCase()) match {
         case Some(pl) => pl ! Player.PrintMessage(s"${RESET}${BLUE}$from: $msg${RESET}")
         case None => sender ! Player.PrintMessage(s"Player $to does not exist.")
       }

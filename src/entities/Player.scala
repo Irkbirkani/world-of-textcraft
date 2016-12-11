@@ -67,9 +67,11 @@ class Player(
       victim = Some(c)
       if (sneaking) {
         self ! Unsneak
-      }
-      if (victim.get == self) {
+      } else if (victim.get == self) {
         output.println("You cannot kill yourself.")
+        victim = None
+      } else if (party.contains(c)) {
+        output.println("You cannot attack a party member.")
         victim = None
       } else {
         output.println("You are hitting " + makeFstCap(c.path.name))
@@ -220,15 +222,18 @@ class Player(
       sneakCD = false
       output.println("Sneak off cooldown!")
     case SendInvite(pl, pt) =>
-      if (party.size == 1) {
+      //TODO refactor to use a "flag" or "mode" system to remove blocking call.
+      
+      println(party.size)
+      if (party.size <= 1) {
         output.println(makeFstCap(pl.path.name) + " invited you to a group. y/_")
         val in = input.readLine
         if ("yes".startsWith(in)) {
           output.println("You joined the group")
           pl ! Player.AcceptInvite(self, location)
           addParty(pt)
-        } else sender ! Player.PrintMessage(s"$name declined your invatation.")
-      } else sender ! PrintMessage(s"$name is already in a group.")
+        } else pl ! Player.PrintMessage(s"$name declined your invatation.")
+      } else pl ! PrintMessage(s"$name is already in a group!")
     case AcceptInvite(pl, loc) =>
       party.filter(p => p._1 != pl && p._1 != self).foreach(p => p._1 ! AddMember(pl, loc))
       output.println(makeFstCap(pl.path.name) + " joined the group.")
@@ -569,7 +574,7 @@ class Player(
   def processCommand(in: String) = {
     //player quit
     if ("quit".startsWith(in)) {
-      leaveParty
+      if (party.size > 1) leaveParty
       location ! Room.LeaveGame(self, name)
       sock.close()
     } //player movement
@@ -618,11 +623,8 @@ class Player(
     } else if (in.startsWith("say")) location ! Room.SayMessage(in.drop(4), name)
     else if (in.startsWith("tell")) tellMessage(in)
     //party commands
-    else if (in.startsWith("invite")) {
-      if (party.filter(p => p._1.path.name != in.drop(7).toUpperCase()).size == 0) {
-        Main.playerManager ! PlayerManager.CheckPlayerExist(in.drop(7), party)
-      } else output.println("Player is already in a group.")
-    } else if ("party".startsWith(in)) printParty
+    else if (in.startsWith("invite")) Main.playerManager ! PlayerManager.CheckPlayerExist(in.drop(7), party)
+    else if ("party".startsWith(in)) printParty
     else if (in.startsWith("leave")) leaveParty
     else if (in.startsWith("/p")) partyChat(in.drop(3))
     //help command
