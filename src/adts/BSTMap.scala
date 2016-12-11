@@ -1,4 +1,5 @@
-package mud
+package adts
+
 import scala.annotation.tailrec
 
 class BSTMap[A, B](eq: (A, A) => Int) extends scala.collection.mutable.Map[A, B] {
@@ -96,23 +97,5 @@ class BSTMap[A, B](eq: (A, A) => Int) extends scala.collection.mutable.Map[A, B]
         }
       }
     }
-  }
-}
-
-
-object BSTMap {
-  def apply[A,B](data: (A,B)*)(eq:(A,A)=> Int): BSTMap[A,B] = {
-    val bm = new BSTMap[A,B](eq)
-    val d = data.sortWith((a,b)=> eq(a._1,b._1)<0).toIndexedSeq
-    def binaryAdd(start: Int, end: Int) {
-      if (start< end) {
-        val mid = (start + end) / 2
-        bm += d(mid)
-        binaryAdd(start,mid)
-        binaryAdd(mid+1,end)
-      }
-    }
-    binaryAdd(0,data.length)
-    bm
   }
 }

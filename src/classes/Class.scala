@@ -1,6 +1,7 @@
-package mud
+package classes
 
 import akka.actor.ActorRef
+import entities._
 
 trait Class {
   def classCommands(in: String, pl: Player, pla: ActorRef): Unit

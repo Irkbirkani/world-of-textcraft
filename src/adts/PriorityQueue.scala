@@ -1,4 +1,4 @@
-package mud
+package adts
 
 trait PriorityQueue[A] {
 

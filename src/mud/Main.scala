@@ -1,15 +1,22 @@
 package mud
-import io.StdIn._
-import java.io.PrintStream
-import java.io.InputStream
+
+import adts._
 import akka.actor.ActorSystem
 import akka.actor.Props
+import classes._
+import entities._
+import io.StdIn._
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.io.PrintStream
+import java.net.Socket
+import java.net.ServerSocket
+import room._
 import scala.concurrent.duration._
 import scala.concurrent.Future
-import java.net.ServerSocket
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.Socket
+
+
 
 object Main extends App {
   //Initializes system, Player Manager, and Room Manager
@@ -62,7 +69,7 @@ object Main extends App {
           clas = in.readLine.trim.toUpperCase()
       }
       playerManager ! PlayerManager.NewPlayer(name, cls, Player.startLvl, Player.playerHealth,
-        "FirstRoom", new MutableDLList[Item](),
+        "FirstRoom", new MutableDLList[Item],
         in, out, sock)
     }
   }

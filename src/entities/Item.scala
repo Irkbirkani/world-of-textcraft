@@ -1,6 +1,4 @@
-
-
-package mud
+package entities
 
 case class Item(name: String, description: String, damage: Int, speed: Int, armor: Int, food:Double, itype: String) {
 

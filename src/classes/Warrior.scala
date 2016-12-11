@@ -1,6 +1,9 @@
-package mud
+package classes
 
 import akka.actor.ActorRef
+import akka.actor.actorRef2Scala
+import entities.Player
+import room.Room
 
 class Warrior extends Class {
 

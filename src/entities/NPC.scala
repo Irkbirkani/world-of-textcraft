@@ -1,8 +1,10 @@
-package mud
+package entities
 
 import akka.actor.Actor
 import akka.actor.ActorRef
 import java.util.function.ToDoubleBiFunction
+import room._
+import mud._
 
 class NPC(val name: String,
     private var _level: Int,

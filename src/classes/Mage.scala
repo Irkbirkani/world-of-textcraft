@@ -1,6 +1,10 @@
-package mud
+package classes
 
 import akka.actor.ActorRef
+import akka.actor.actorRef2Scala
+import entities.Player
+import mud.Main
+import room.RoomManager
 
 class Mage extends Class {
   def classCommands(in: String, pl: Player, pla: ActorRef) = {

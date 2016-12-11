@@ -1,4 +1,4 @@
-package mud
+package adts
 
 import collection.mutable
 
@@ -119,11 +119,6 @@ class MutableDLList[A] extends mutable.Buffer[A] {
   }
 
   override def toString = mkString("MutableDLList(", ", ", ")")
-}
-
-object MutableDLList extends App {
-  val a = new MutableDLList[Int].fill(5)(0)
-  println(a.length)
 }
 
 

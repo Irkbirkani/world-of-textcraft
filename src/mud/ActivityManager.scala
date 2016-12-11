@@ -2,6 +2,7 @@ package mud
 
 import akka.actor.Actor
 import akka.actor.ActorRef
+import adts._
 
 class ActivityManager extends Actor {
   import ActivityManager._

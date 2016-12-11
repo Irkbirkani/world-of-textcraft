@@ -1,6 +1,7 @@
-package mud
+package adts
 
 import scala.reflect.ClassTag
+
 
 class BinaryHeapPriorityQueue[A: ClassTag](comp: (A, A) => Int) extends PriorityQueue[A] {
   private var heap = new Array[A](10)
@@ -46,19 +47,4 @@ class BinaryHeapPriorityQueue[A: ClassTag](comp: (A, A) => Int) extends Priority
   def peek: A = heap(1)
 
   def isEmpty: Boolean = end == 1
-}
-
-object BinaryHeapPriorityQueue extends App {
-
-  private def BHComp(a: Int, b: Int): Int = {
-    if (a == b) 0
-    else if (a < b) 1
-    else (-1)
-  }
-  
-  val queue = new BinaryHeapPriorityQueue[Int](BHComp)
-  
-  queue.enqueue(1)
-  queue.enqueue(5)
-  println(queue.dequeue())
 }

@@ -1,4 +1,4 @@
-package mud
+package adts
 
 import scala.reflect.ClassTag
 

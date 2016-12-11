@@ -1,8 +1,12 @@
-package mud
+package entities
 
 import akka.actor.Actor
 import akka.actor.Props
-import akka.actor.ActorRef
+import akka.actor.actorRef2Scala
+import entities._
+import mud.Main
+import room.RoomManager
+
 
 class NPCManager extends Actor {
   import NPCManager._

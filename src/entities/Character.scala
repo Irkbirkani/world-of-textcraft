@@ -1,4 +1,4 @@
-package mud
+package entities
 
 import akka.actor.ActorRef
 

@@ -1,9 +1,11 @@
-package mud
+package room
 
+import adts.BSTMap
 import akka.actor.Actor
-import scala.io.Source
-import akka.actor.Props
 import akka.actor.ActorRef
+import akka.actor.actorRef2Scala
+import akka.actor.Props
+import entities.{ Character, Player }
 
 class RoomManager extends Actor {
   import RoomManager._
