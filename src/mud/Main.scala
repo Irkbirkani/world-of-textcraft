@@ -16,8 +16,6 @@ import room._
 import scala.concurrent.duration._
 import scala.concurrent.Future
 
-
-
 object Main extends App {
   //Initializes system, Player Manager, Room Manager, NPC Manager, and Activity Manager
   val system = ActorSystem("Main")
@@ -49,7 +47,11 @@ object Main extends App {
         out.println("Invalid name. Try again.")
         name = (in.readLine().trim).filter(x => x.isLetter)
       }
-      out.println("Choose a Class.\r\nWarrior\r\nMage\r\nRogue\r\nPriest")
+      out.println("Choose a Class.\r\n")
+      out.print("Warrior\r\n")
+      out.print("Mage\r\n")
+      out.print("Rogue\r\n")
+      out.println("Priest")
       var clas = in.readLine().trim.toUpperCase()
       var cls: Class = null
       while (clas.trim.toUpperCase != "WARRIOR"
