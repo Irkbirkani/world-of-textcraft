@@ -603,7 +603,7 @@ class Player(
     else if (in.startsWith("unequip")) unequip(in.drop(8))
     else if ("gear".startsWith(in)) printEquipment
     else if ("character".startsWith(in)) {
-      output.println(name +
+      output.println(makeFstCap(name) +
         "\r\nClass: " + clas.name +
         "\r\nLocation: " + location.path.name +
         "\r\nHealth: " + health +
