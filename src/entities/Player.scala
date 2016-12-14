@@ -640,6 +640,7 @@ class Player(
     } else clas.classCommands(in, this, self)
   }
 }
+
 object Player {
   case object ProcessInput
   case class PrintMessage(msg: String)
