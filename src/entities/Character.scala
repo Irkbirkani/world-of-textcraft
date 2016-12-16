@@ -190,5 +190,7 @@ object Character {
     pl.output.println((pl.makeFstCap(pla.path.name) + " left the group."))
 
   }
+  
+  case object Unsneak
 
 }

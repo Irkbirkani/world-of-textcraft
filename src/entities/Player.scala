@@ -173,6 +173,8 @@ abstract class Player(
   }
 
   //Class Management
+  def classCommands(in: String, pl: Player, pla: ActorRef): Unit
+
   val abilityPower: Int
   val abilitySpeed: Int
   val abilities: Map[String, Int]
@@ -401,7 +403,7 @@ abstract class Player(
     else if ("up".startsWith(in)) move(4, self)
     else if ("down".startsWith(in)) move(5, self)
     else if ("look".startsWith(in)) location ! Room.PrintDescription
-    else if (in.startsWith("shortPath")) Main.roomManager ! RoomManager.ShortPath(location.path.name, in.drop(10))
+    else if (in.startsWith("getto")) Main.roomManager ! RoomManager.ShortPath(location.path.name, in.drop(6))
     //player inventory
     else if (in.length > 0 && "inventory".startsWith(in)) printInventory
     else if (in.startsWith("inspect")) inspectItem(in.trim.drop(8))
@@ -453,17 +455,13 @@ abstract class Player(
           output.println(s"${RESET}${GREEN}$h${RESET}")
         } else output.println(i)
       }
-    }
+    } else classCommands(in, this, self)
   }
 }
 
 object Player {
 
-  case object Sneak
-  case object Unsneak
-
-  case object SneakCD
-
+ 
   val startLvl = 1
 
   val punchDamage = 3
