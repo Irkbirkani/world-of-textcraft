@@ -4,7 +4,6 @@ import adts.MutableDLList
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.actorRef2Scala
-import classes.Class
 import java.io.PrintStream
 import java.io.BufferedReader
 import java.net.Socket
@@ -13,240 +12,27 @@ import room._
 import scala.io.Source
 import scala.Console._
 
-class Player(
+abstract class Player(
     val name: String,
-    val clas: Class,
     private var _level: Int,
     private var _health: Double,
     private var _inventory: MutableDLList[Item],
     val input: BufferedReader,
     val output: PrintStream,
-    val sock: Socket) extends Actor {
-
-  _health += clas.hlthInc
+    val sock: Socket) {
 
   import Player._
   import Character._
   import ActivityManager._
 
+  def receive: PartialFunction[Any, Unit]
+
   //location access
   private var _location: ActorRef = null
   def location = _location
+  def newLoc(dest: ActorRef) = _location = dest
 
   //Actor Management
-  def receive = {
-    case ProcessInput =>
-      if (input.ready() && !stunned) {
-        val in = input.readLine().trim
-        if (in.nonEmpty) {
-          processCommand(in)
-        }
-      }
-    case PrintMessage(msg) => output.println(msg)
-    case AddToInventory(item) =>
-      item match {
-        case Some(item) =>
-          addToInventory(item)
-          if (!sneaking) location ! Room.SayMessage("picked up " + item.name + ".", name)
-          else output.println("You grabbed " + item.name + "!")
-        case None =>
-          output.println("Item not found")
-      }
-    case TakeExit(dir) =>
-      dir match {
-        case Some(dest) =>
-          if (_location != null) location ! Room.LeaveRoom(self, makeFstCap(name), sneaking)
-          _location = dest
-          changeLoc(self, dest)
-          location ! Room.EnterRoom(self, makeFstCap(name), sneaking)
-          location ! Room.PrintDescription
-        case None =>
-          output.println("You can't go that way")
-      }
-    case KillCmnd(c) =>
-      victim = Some(c)
-      if (sneaking) {
-        self ! Unsneak
-      } else if (victim.get == self) {
-        output.println("You cannot kill yourself.")
-        victim = None
-      } else if (party.contains(c)) {
-        output.println("You cannot attack a party member.")
-        victim = None
-      } else {
-        output.println("You are hitting " + makeFstCap(c.path.name))
-        Main.activityManager ! Enqueue(speed, AttackNow)
-      }
-    case AttackNow =>
-      if (isAlive && !stunned) {
-        victim.foreach(c => c ! SendDamage(location, damage))
-      }
-    case SendDamage(loc, dmg) =>
-      if (loc == location) {
-        val realDamage = takeDamage(dmg)
-        sender ! DamageTaken(realDamage, isAlive, health.toInt)
-        output.println(makeFstCap(sender.path.name) + " dealt " + realDamage + " damage! Health is at " + health)
-        if (!isAlive) {
-          clearInventory
-          location ! Room.HasDied(self, name)
-          sender ! ResetVictim
-          sender ! SendExp(pvpXP)
-          victim = None
-          Main.activityManager ! Enqueue(50, ResetChar)
-        } else if (victim.isEmpty) {
-          victim = Some(sender)
-          Main.activityManager ! Enqueue(speed, AttackNow)
-        }
-      } else {
-        sender ! PrintMessage("You are having a hard time finding them.")
-      }
-    case DamageTaken(dmg, alive, hp) =>
-      if (alive && victim.nonEmpty) {
-        output.println("You dealt " + dmg + " damage to " + makeFstCap(victim.get.path.name) + "! " +
-          makeFstCap(victim.get.path.name) + " has " + hp + " health left!")
-        kill(victim.get.path.name)
-      } else if (victim.nonEmpty) {
-        output.println("you killed " + victim.get.path.name + ".")
-        victim = None
-      }
-    case ResetChar =>
-      _health = playerHealth
-      isAlive = true
-      victim = None
-      Main.roomManager ! RoomManager.EnterRoom("FirstRoom", self)
-    case ResetVictim =>
-      victim = None
-    case View(name) =>
-      name ! Stats
-    case Stats =>
-      sender ! PrintMessage("Level: " + level + "\r\nClass: " + clasName)
-    case SendExp(xp) =>
-      party.filter(p => p._2 == location).foreach(p => p._1 ! AddExp(xp))
-    case AddExp(xp) =>
-      addExp(xp)
-    case HealCmnd(pl) =>
-      if (healCD) {
-        output.println("Heal on Cooldown")
-      } else {
-        output.println("Healing " + pl.path.name)
-        healCD = true
-        Main.activityManager ! Enqueue(clas.abilitySpeed, SendHeal(pl))
-        Main.activityManager ! Enqueue(50, HealCD)
-      }
-    case SendHeal(c) =>
-      val healAmnt = level * clas.abilityPower
-      c ! ReceiveHeal(healAmnt)
-    case ReceiveHeal(hl) =>
-      addHlth(hl)
-      output.println("Healed for " + hl + "!")
-      sender ! Player.PrintMessage("Healed " + makeFstCap(name) + " for " + hl + "!")
-    case HealCD =>
-      healCD = false
-    case StunCmnd(c) =>
-      victim = Some(c)
-      if (victim.get == self) {
-        output.println("You cannot stun yourself.")
-        victim = None
-      } else if (stunCD) {
-        output.println("Stun is on cooldown.")
-      } else {
-        output.println("You stunned " + makeFstCap(c.path.name))
-        Main.activityManager ! Enqueue(speed, SendStun(victim.get))
-        stunCD = true
-        Main.activityManager ! Enqueue(80, StunCD)
-        kill(victim.get.path.name)
-      }
-    case SendStun(c) =>
-      c ! Stun(self)
-    case Stun(c) =>
-      stunned = true
-      Main.activityManager ! Enqueue(30, Unstun(c))
-      output.println("You've been stunned!")
-    case Unstun(c) =>
-      stunned = false
-      output.println("You're no longer stunned!")
-      kill(c.path.name)
-    case StunCD =>
-      stunCD = false
-    case StartTeleport(rm) =>
-      if (teleCD) {
-        output.println("Teleport on cooldown!")
-      } else {
-        output.println("Teleporting to " + rm + "!")
-        teleCD = true
-        Main.activityManager ! Enqueue(100, Teleport(rm))
-        Main.activityManager ! Enqueue(600, TeleCD)
-      }
-    case Teleport(rm) =>
-      Main.roomManager ! RoomManager.EnterRoom(rm, self)
-    case TeleCD =>
-      teleCD = false
-    case PoisonCmnd(c) =>
-      victim = Some(c)
-      if (victim.get == self) {
-        output.println("You cannot poison yourself.")
-        victim = None
-      } else {
-        output.println("You poisoned " + c.path.name)
-        Main.activityManager ! Enqueue(speed, SendPoison(c, clas.abilityPower * level))
-        kill(victim.get.path.name)
-      }
-    case SendPoison(c, dmg) =>
-      c ! Poisoned(dmg)
-    case Poisoned(dmg) =>
-      poisoned = true
-      output.println("You've been poisoned!")
-      if (poisoned) {
-        rmvHlth(dmg)
-        output.println("Poison did " + dmg + " damage!")
-        poison(dmg)
-      }
-      Main.activityManager ! Enqueue(100, Unpoison)
-    case Unpoison =>
-      poisoned = false
-    case Sneak =>
-      if (sneakCD) {
-        output.println("Sneak on cooldown")
-      } else {
-        sneaking = true
-        sneakCD = true
-        output.println("You are sneaking!")
-        Main.activityManager ! Enqueue(600, Unsneak)
-        Main.activityManager ! Enqueue(600, SneakCD)
-      }
-    case Unsneak =>
-      if (sneaking) output.println("You are no longer sneaking!")
-      sneaking = false
-      location ! Room.Unstealth(self)
-    case SneakCD =>
-      sneakCD = false
-      output.println("Sneak off cooldown!")
-    case SendInvite(pl, pt) =>
-      //TODO refactor to use a "flag" or "mode" system to remove blocking call.
-      
-      println(party.size)
-      if (party.size <= 1) {
-        output.println(makeFstCap(pl.path.name) + " invited you to a group. y/_")
-        val in = input.readLine
-        if ("yes".startsWith(in)) {
-          output.println("You joined the group")
-          pl ! Player.AcceptInvite(self, location)
-          addParty(pt)
-        } else pl ! Player.PrintMessage(s"$name declined your invatation.")
-      } else pl ! PrintMessage(s"$name is already in a group!")
-    case AcceptInvite(pl, loc) =>
-      party.filter(p => p._1 != pl && p._1 != self).foreach(p => p._1 ! AddMember(pl, loc))
-      output.println(makeFstCap(pl.path.name) + " joined the group.")
-      addMember(pl, loc)
-    case AddMember(pl, loc) =>
-      addMember(pl, loc)
-      output.println(makeFstCap(pl.path.name) + " joined the group.")
-    case ChangeLoc(pl, newLoc) =>
-      _party(pl) = newLoc
-    case RemoveMember(pl) =>
-      rmvMember(pl)
-      output.println((makeFstCap(pl.path.name) + " left the group."))
-  }
 
   //Inventory Management
   def inventory = _inventory
@@ -349,12 +135,12 @@ class Player(
   def printEquipment = {
     if (equipment.length == 0) {
       output.println("Nothing equipped.")
-      output.println("Armor: " + (armor + clas.dmgReduc) +
+      output.println("Armor: " + (armor + dmgReduc) +
         "\r\nDamage: " + damage +
         "\r\nSpeed: " + speed)
     } else {
       equipment.foreach(c => output.println(c.bodyPart + ": " + c.item.name))
-      output.println("Armor: " + (armor + clas.dmgReduc) +
+      output.println("Armor: " + (armor + dmgReduc) +
         "\r\nDamage: " + damage +
         "\r\nSpeed: " + speed)
     }
@@ -387,30 +173,45 @@ class Player(
   }
 
   //Class Management
-  def clasName = clas.name
+  val abilityPower: Int
+  val abilitySpeed: Int
+  val abilities: Map[String, Int]
+
+  val className: String
+
+  val stamina: Int
+
+  val classPower: Int
+
+  val dmgReduc: Int
+
+  val hlthInc: Int
+
   def printAbilities = {
     output.println("Abilities:")
-    clas.abilities.foreach(a => output.println(a._1 + ": available at level " + a._2))
+    abilities.foreach(a => output.println(a._1 + ": available at level " + a._2))
   }
 
-  var stunCD = false
   var teleCD = false
   var sneakCD = false
-  var healCD = false
 
   //Health Management
-  val baseHlth = playerHealth + clas.hlthInc
+  val baseHlth = playerHealth + hlthInc
   def health = _health
+
+  def resetHlth = {
+    _health = playerHealth
+  }
 
   def addHlth(h: Int): Unit = {
     val newHlth = health + h
     if (newHlth > baseHlth) _health = baseHlth else _health = newHlth
   }
 
-  def rmvHlth(dmg: Int) = {
+  def rmvHlth(dmg: Int, self: ActorRef) = {
     val newHlth = health - dmg
     if (newHlth <= 0) {
-      Main.activityManager ! Enqueue(50, ResetChar)
+      Main.activityManager ! ActivityManager.Enqueue(50, ResetChar, self)
     } else _health -= dmg
   }
 
@@ -479,9 +280,11 @@ class Player(
   //Party Management
   //party keeps a map of Player->Location
   import scala.collection.mutable
-  private var _party: mutable.Map[ActorRef, ActorRef] = mutable.Map(self -> location)
+  private var _party: mutable.Map[ActorRef, ActorRef] = mutable.Map()
 
   def party = _party
+
+  def setLoc(pl: ActorRef, newLoc: ActorRef) = _party(pl) = newLoc
 
   def changeLoc(pl: ActorRef, newLoc: ActorRef) = {
     party.foreach(a => a._1 ! ChangeLoc(pl, newLoc))
@@ -491,11 +294,11 @@ class Player(
     _party = party ++ newParty
   }
 
-  def addMember(pl: ActorRef, loc: ActorRef) = {
+  def addMem(pl: ActorRef, loc: ActorRef) = {
     _party += (pl -> loc)
   }
 
-  def leaveParty = {
+  def leaveParty(self: ActorRef) = {
     party.filter(_ != (self -> location)).foreach(p => p._1 ! RemoveMember(self))
     output.println("You left the group.")
     _party = scala.collection.mutable.Map(self -> location)
@@ -511,29 +314,42 @@ class Player(
     }
   }
 
-  def partyChat(msg: String) = {
+  def partyChat(msg: String, self: ActorRef) = {
     party.filter(p => p._1 != self).foreach(p => p._1 ! PrintMessage({ RESET } + { GREEN } + name + ": " + msg + { RESET }))
   }
 
   //Combat Management
-  private var victim: Option[ActorRef] = None
+  private var _victim: Option[ActorRef] = None
+  def victim = _victim
+  def setVictim(c: Option[ActorRef]) = _victim = c
 
-  var isAlive = true
-  var stunned = false
-  var poisoned = false
-  var sneaking = false
+  private var _isAlive = true
+  def isAlive = _isAlive
+  def setAlive = _isAlive = !isAlive
 
-  def poison(dmg: Int) = {
+  private var _stunned = false
+  def stunned = _stunned
+  def setStun = _stunned = !stunned
+
+  private var _poisoned = false
+  def poisoned = _poisoned
+  def setPoisoned = _poisoned = !poisoned
+
+  private var _sneaking = false
+  def sneaking = _sneaking
+  def setSneak = _sneaking = !sneaking
+
+  def poison(dmg: Int, self: ActorRef) = {
     var count = 3
     while (poisoned) {
       if (count == 0) {
-        Main.activityManager ! Enqueue(20, Poisoned(dmg))
+        Main.activityManager ! ActivityManager.Enqueue(20, Poisoned(dmg), self)
         count = 3
       } else count -= 1
     }
   }
 
-  def kill(pl: String): Unit = {
+  def kill(pl: String, self: ActorRef): Unit = {
     location ! Room.CheckInRoom("kill", pl.toUpperCase(), self)
   }
 
@@ -544,15 +360,15 @@ class Player(
     val actDmg = if (damage == 0) 0
     else if (damage >= 1 && damage <= 5) dmg
     else dmg * 2
-    val totalDmg = if (actDmg - ((armor + clas.dmgReduc) * armorReduc) < 0) 0 else actDmg - (armor + clas.dmgReduc) * armorReduc
+    val totalDmg = if (actDmg - ((armor + dmgReduc) * armorReduc) < 0) 0 else actDmg - (armor + dmgReduc) * armorReduc
     _health -= totalDmg
     if (_health <= 0) {
-      isAlive = false
+      setAlive
     }
     totalDmg
   }
 
-  def view(name: String) = {
+  def view(name: String, self: ActorRef) = {
     location ! Room.CheckInRoom("view", name.toUpperCase(), self)
   }
 
@@ -571,10 +387,10 @@ class Player(
   }
 
   //Process Player Input
-  def processCommand(in: String) = {
+  def processCommand(in: String, self: ActorRef): Unit = {
     //player quit
     if ("quit".startsWith(in)) {
-      if (party.size > 1) leaveParty
+      if (party.size > 1) leaveParty(self)
       location ! Room.LeaveGame(self, name)
       sock.close()
     } //player movement
@@ -604,18 +420,18 @@ class Player(
     else if ("gear".startsWith(in)) printEquipment
     else if ("character".startsWith(in)) {
       output.println(makeFstCap(name) +
-        "\r\nClass: " + clas.name +
+        "\r\nClass: " + className +
         "\r\nLocation: " + location.path.name +
         "\r\nHealth: " + health +
         "\r\nLevel: " + level +
         "\r\nEXP till next level: " + (newLvlAt - exp))
     } //combat commands
     else if ("abilities".startsWith(in)) printAbilities
-    else if (in.startsWith("view")) view(in.drop(5))
-    else if (in.startsWith("kill")) kill(in.drop(5))
+    else if (in.startsWith("view")) view(in.drop(5), self)
+    else if (in.startsWith("kill")) kill(in.drop(5), self)
     else if ("health".startsWith(in)) output.println("Health at: " + health)
     else if ("flee".startsWith(in) && victim.nonEmpty) {
-      victim = None
+      setVictim(None)
       location ! Room.GetExit(util.Random.nextInt(5))
     } //player messaging
     else if (in.startsWith("shout")) {
@@ -625,8 +441,8 @@ class Player(
     //party commands
     else if (in.startsWith("invite")) Main.playerManager ! PlayerManager.CheckPlayerExist(in.drop(7), party)
     else if ("party".startsWith(in)) printParty
-    else if (in.startsWith("leave")) leaveParty
-    else if (in.startsWith("/p")) partyChat(in.drop(3))
+    else if (in.startsWith("leave")) leaveParty(self)
+    else if (in.startsWith("/p")) partyChat(in.drop(3), self)
     //help command
     else if ("help".startsWith(in)) {
       val source = Source.fromFile("help.txt")
@@ -637,31 +453,15 @@ class Player(
           output.println(s"${RESET}${GREEN}$h${RESET}")
         } else output.println(i)
       }
-    } else clas.classCommands(in, this, self)
+    }
   }
 }
 
 object Player {
-  case object ProcessInput
-  case class PrintMessage(msg: String)
 
-  case class AddToInventory(item: Option[Item])
-
-  case class AddExp(xp: Int)
-
-  case class SendInvite(pl: ActorRef, pt: scala.collection.mutable.Map[ActorRef, ActorRef])
-  case class AcceptInvite(pl: ActorRef, loc: ActorRef)
-  case class AddMember(pl: ActorRef, loc: ActorRef)
-  case class ChangeLoc(pl: ActorRef, loc: ActorRef)
-  case class RemoveMember(pl: ActorRef)
-
-  case class StartTeleport(rm: String)
-  case class Teleport(rm: String)
   case object Sneak
   case object Unsneak
-  case object StunCD
-  case object HealCD
-  case object TeleCD
+
   case object SneakCD
 
   val startLvl = 1

@@ -3,7 +3,6 @@ package mud
 import adts._
 import akka.actor.ActorSystem
 import akka.actor.Props
-import classes._
 import entities._
 import io.StdIn._
 import java.io.BufferedReader
@@ -60,19 +59,22 @@ object Main extends App {
         name = (in.readLine().trim).filter(x => x.isLetter)
       }
       out.print("Choose a Class:\r\n\n")
-      out.print({ RESET } + { RED } + "Warrior->        Warriors are heavy hitters on the battle field.\n\r")
+      out.print({ RESET } + { RED } + 
+                "Warrior->        Warriors are heavy hitters on the battle field.\n\r")
       out.print("                 They have high damage reduction and are at their\n\r")
       out.print("                 best in the midst of battle.\n\r\n")
-      out.print({ RESET } + { CYAN } + "Mage->           Mages are highly intellectual. They bombard their\r\n")
+      out.print({ RESET } + { CYAN } +
+                "Mage->           Mages are highly intellectual. They bombard their\r\n")
       out.print("                 foes with a multitude of attacks.\n\r\n")
-      out.print({ RESET } + { GREEN } + "Rogue->          Rogues are creatures of the dark. They sneak around\r\n")
+      out.print({ RESET } + { GREEN } + 
+                "Rogue->          Rogues are creatures of the dark. They sneak around\r\n")
       out.print("                 poisoning their targets and disapear into the dark.\r\n\n")
-      out.print({ RESET } + { YELLOW } + "Priest->         Priests are pure in heart. They are able to heal their \r\n")
+      out.print({ RESET } + { YELLOW } +
+                "Priest->         Priests are pure in heart. They are able to heal their \r\n")
       out.print("                 allies and help increase their atack power.\n\r\n" + { RESET })
       out.print("-> ")
-      
+
       var clas = in.readLine().trim.toUpperCase()
-      var cls: Class = null
       while (clas.trim.toUpperCase != "WARRIOR"
         && clas.trim.toUpperCase != "MAGE"
         && clas.trim.toUpperCase != "ROGUE"
@@ -82,16 +84,26 @@ object Main extends App {
         clas = in.readLine().trim.toUpperCase()
       }
       clas match {
-        case "WARRIOR" => cls = new Warrior
-        case "MAGE" => cls = new Mage
-        case "ROGUE" => cls = new Rogue
-        case "PRIEST" => cls = new Priest
-      }
-      playerManager ! PlayerManager.NewPlayer(name, cls, Player.startLvl, Player.playerHealth,
+        case "WARRIOR" => 
+           playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Player.playerHealth,
         "FirstRoom", new MutableDLList[Item],
         in, out, sock)
+        case "MAGE" =>  
+          playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Player.playerHealth,
+        "FirstRoom", new MutableDLList[Item],
+        in, out, sock)
+        case "ROGUE" => 
+          playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Player.playerHealth,
+        "FirstRoom", new MutableDLList[Item],
+        in, out, sock)
+        case "PRIEST" => 
+          playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Player.playerHealth,
+        "FirstRoom", new MutableDLList[Item],
+        in, out, sock)
+      }
     }
   }
+
   system.scheduler.schedule(0.seconds, 0.1.seconds, activityManager, ActivityManager.CheckQueue)
   system.scheduler.schedule(0.seconds, 0.1.seconds, playerManager, PlayerManager.CheckInput)
   checkConnections()

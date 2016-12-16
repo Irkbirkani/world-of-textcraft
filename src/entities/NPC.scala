@@ -21,7 +21,7 @@ class NPC(val name: String,
   private var _location: ActorRef = null
   def location = _location
 
-  Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
+  Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove, self)
   //set start values
   val startHlth = _health
   val startItems = items
@@ -42,11 +42,11 @@ class NPC(val name: String,
     case RequestMove =>
       if (location != null) {
         this.move(util.Random.nextInt(5))
-        Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove)
+        Main.activityManager ! ActivityManager.Enqueue(NPC.moveTime, NPC.RequestMove, self)
       }
     case KillCmnd(c) =>
       var victim = c
-      Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
+      Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow, self)
     case AttackNow =>
       if (!stunned) victim.foreach(c => c ! SendDamage(location, attack))
     case SendDamage(loc, dmg) =>
@@ -55,7 +55,7 @@ class NPC(val name: String,
         sender ! DamageTaken(realDamage, isAlive, health.toInt)
         if (!isAlive) {
           location ! Room.HasDied(self, name)
-          Main.activityManager ! ActivityManager.Enqueue(450, ResetChar)
+          Main.activityManager ! ActivityManager.Enqueue(450, ResetChar, self)
           sender ! ResetVictim
           sender ! SendExp(exp)
           victim = None
@@ -63,7 +63,7 @@ class NPC(val name: String,
           _location = null
         } else if (victim.isEmpty) {
           victim = Some(sender)
-          Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow)
+          Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow, self)
         }
       }
     case DamageTaken(dmg, alive, hp) =>
@@ -84,24 +84,24 @@ class NPC(val name: String,
     case View(name) =>
       name ! Stats
     case Stats =>
-      sender ! Player.PrintMessage(name + ": " + desc +
+      sender ! PrintMessage(name + ": " + desc +
         "\r\nLevel: " + level +
         "\r\nHealth: " + health)
     case ReceiveHeal(hl) =>
       addHlth(hl)
-      sender ! Player.PrintMessage("Healed " + name + " for " + hl + "!")
+      sender ! PrintMessage("Healed " + name + " for " + hl + "!")
     case Poisoned(dmg) =>
       poisoned = true
       if (poisoned) {
         rmvHlth(dmg)
         poison(dmg)
       }
-      Main.activityManager ! ActivityManager.Enqueue(100, Unpoison)
+      Main.activityManager ! ActivityManager.Enqueue(100, Unpoison, self)
     case Unpoison =>
       poisoned = false
     case Stun(c) =>
       stunned = true
-      Main.activityManager ! ActivityManager.Enqueue(30, Unstun(c))
+      Main.activityManager ! ActivityManager.Enqueue(30, Unstun(c), self)
     case Unstun(c) =>
       stunned = false
       kill(c.path.name)
@@ -119,7 +119,7 @@ class NPC(val name: String,
     var count = 3
     while (poisoned) {
       if (count == 0) {
-        Main.activityManager ! ActivityManager.Enqueue(20, Poisoned(dmg))
+        Main.activityManager ! ActivityManager.Enqueue(20, Poisoned(dmg), self)
         count = 3
       } else count -= 1
     }
@@ -149,7 +149,7 @@ class NPC(val name: String,
   def rmvHlth(dmg: Int) = {
     val newHlth = health - dmg
     if (newHlth <= 0) {
-      Main.activityManager ! ActivityManager.Enqueue(450, ResetChar)
+      Main.activityManager ! ActivityManager.Enqueue(450, ResetChar, self  )
     } else _health -= dmg
   }
 

@@ -8,7 +8,7 @@ class ActivityManager extends Actor {
   import ActivityManager._
   private var ticks = 0
   def receive = {
-    case Enqueue(delay, message) =>
+    case Enqueue(delay, message, sender) =>
       val a = new Activity(delay + ticks, sender, message)
       queue.enqueue(a)
     case CheckQueue =>
@@ -29,6 +29,6 @@ class ActivityManager extends Actor {
 }
 
 object ActivityManager {
-  case class Enqueue(delay: Int, message: Any)
+  case class Enqueue(delay: Int, message: Any, sender:ActorRef)
   case object CheckQueue
 }

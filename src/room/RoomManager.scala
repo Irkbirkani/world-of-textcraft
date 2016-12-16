@@ -9,6 +9,8 @@ import entities.{ Character, Player }
 
 class RoomManager extends Actor {
   import RoomManager._
+  import entities.Character.PrintMessage
+  import entities.Mage._
   //Actor Management
   def receive = {
     case EnterRoom(loc, p) =>
@@ -17,12 +19,12 @@ class RoomManager extends Actor {
       roomExits += (key -> exits)
     case ShortPath(curr, dest) =>
       val path = shortestPath(curr, dest, roomExits, List())
-      path.foreach(a => if (a.nonEmpty) sender ! Player.PrintMessage(a))
+      path.foreach(a => if (a.nonEmpty) sender ! PrintMessage(a))
     case CheckExists(rm, ar) =>
       if (!rooms.contains(rm.toUpperCase)) {
         rooms.foreach(println)
-        ar ! Player.PrintMessage(rm + " is not a room!")
-      } else ar ! Player.StartTeleport(rm.filter(x => !x.isWhitespace))
+        ar ! PrintMessage(rm + " is not a room!")
+      } else ar ! StartTeleport(rm.filter(x => !x.isWhitespace))
   }
   private def comp(s1: String, s2: String): Int = {
     if (s1 == s2) 0

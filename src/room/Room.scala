@@ -19,8 +19,8 @@ class Room(
   import Character._
 
   def receive = {
-    case PrintDescription =>
-      sender ! Player.PrintMessage(printDescription)
+    case PrintDescription(sender) =>
+      sender ! PrintMessage(printDescription)
     //Exit Management
     case GetExit(dir) =>
       sender ! TakeExit(getExit(dir))
@@ -29,22 +29,22 @@ class Room(
       sender ! RoomManager.LinkingRooms(name, exits)
     //Item Management
     case GetItem(name, itemName) =>
-      sender ! Player.AddToInventory(getItem(itemName))
+      sender !  AddToInventory(getItem(itemName))
     case DropItem(name, item) =>
       dropItem(item)
     //Player Management
     case EnterRoom(pl, name, stlth) =>
       if (!stlth) {
-        chars.foreach(p => p._1 ! Player.PrintMessage(name + " entered the room."))
+        chars.foreach(p => p._1 !  PrintMessage(name + " entered the room."))
       }
       addPlayer(pl, stlth)
     case LeaveRoom(pl, name, stlth) =>
       if (!stlth) {
-        chars.foreach(p => p._1 ! Player.PrintMessage(name + " left the room."))
+        chars.foreach(p => p._1 !  PrintMessage(name + " left the room."))
       }
       removePlayer(pl)
     case LeaveGame(pl, name) =>
-      chars.foreach(p => p._1 ! Player.PrintMessage(makeFstCap(name) + " left the game."))
+      chars.foreach(p => p._1 !  PrintMessage(makeFstCap(name) + " left the game."))
       removePlayer(pl)
     case Unstealth(pl) =>
       _chars.find(_._1 == pl) match {
@@ -54,15 +54,15 @@ class Room(
           println("None called on Room.Unstealth")
       }
     case HasDied(pl, name) =>
-      chars.foreach(p => p._1 ! Player.PrintMessage(name + " has died!"))
+      chars.foreach(p => p._1 !  PrintMessage(name + " has died!"))
       removePlayer(pl)
     //Messages  
     case SayMessage(msg, name) =>
-      chars.foreach(p => p._1 ! Player.PrintMessage(s"${RESET}${MAGENTA}$name: $msg${RESET}"))
+      chars.foreach(p => p._1 !  PrintMessage(s"${RESET}${MAGENTA}$name: $msg${RESET}"))
     case CheckInRoom(cmd, pl, ar) =>
       val ch = chars.filter(c => c._1.path.name == pl).map(x => x._1)
       if (ch.length == 0) {
-        ar ! Player.PrintMessage("Invalid Target")
+        ar !  PrintMessage("Invalid Target")
       } else cmd match {
         case "kill" =>
           ar ! KillCmnd(ch(0))
@@ -75,7 +75,7 @@ class Room(
         case "poison" =>
           ar ! PoisonCmnd(ch(0))
         case _ =>
-          ar ! Player.PrintMessage("Unknown command")
+          ar !  PrintMessage("Unknown command")
           println("Unknown command sent.")
       }
 
@@ -130,7 +130,7 @@ class Room(
 
 object Room {
   //Description
-  case object PrintDescription
+  case class PrintDescription(sender:ActorRef)
   //Inventory Management
   case class GetItem(name: String, itemName: String)
   case class DropItem(name: String, item: Item)
