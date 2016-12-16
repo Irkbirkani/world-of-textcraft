@@ -22,29 +22,29 @@ class Room(
     case PrintDescription(sender) =>
       sender ! PrintMessage(printDescription)
     //Exit Management
-    case GetExit(dir) =>
-      sender ! TakeExit(getExit(dir))
+    case GetExit(dir, pla) =>
+      pla ! TakeExit(getExit(dir))
     case LinkRooms(rooms) =>
       actorExits = exits.map(e => if (e.isEmpty) None else Some(rooms(e.toUpperCase)))
       sender ! RoomManager.LinkingRooms(name, exits)
     //Item Management
-    case GetItem(name, itemName) =>
-      sender !  AddToInventory(getItem(itemName))
+    case GetItem(name, itemName, pla) =>
+      pla ! AddToInventory(getItem(itemName))
     case DropItem(name, item) =>
       dropItem(item)
     //Player Management
     case EnterRoom(pl, name, stlth) =>
       if (!stlth) {
-        chars.foreach(p => p._1 !  PrintMessage(name + " entered the room."))
+        chars.foreach(p => p._1 ! PrintMessage(name + " entered the room."))
       }
       addPlayer(pl, stlth)
     case LeaveRoom(pl, name, stlth) =>
       if (!stlth) {
-        chars.foreach(p => p._1 !  PrintMessage(name + " left the room."))
+        chars.foreach(p => p._1 ! PrintMessage(name + " left the room."))
       }
       removePlayer(pl)
     case LeaveGame(pl, name) =>
-      chars.foreach(p => p._1 !  PrintMessage(makeFstCap(name) + " left the game."))
+      chars.foreach(p => p._1 ! PrintMessage(makeFstCap(name) + " left the game."))
       removePlayer(pl)
     case Unstealth(pl) =>
       _chars.find(_._1 == pl) match {
@@ -54,15 +54,15 @@ class Room(
           println("None called on Room.Unstealth")
       }
     case HasDied(pl, name) =>
-      chars.foreach(p => p._1 !  PrintMessage(name + " has died!"))
+      chars.foreach(p => p._1 ! PrintMessage(name + " has died!"))
       removePlayer(pl)
     //Messages  
     case SayMessage(msg, name) =>
-      chars.foreach(p => p._1 !  PrintMessage(s"${RESET}${MAGENTA}$name: $msg${RESET}"))
+      chars.foreach(p => p._1 ! PrintMessage(s"${RESET}${MAGENTA}$name: $msg${RESET}"))
     case CheckInRoom(cmd, pl, ar) =>
       val ch = chars.filter(c => c._1.path.name == pl).map(x => x._1)
       if (ch.length == 0) {
-        ar !  PrintMessage("Invalid Target")
+        ar ! PrintMessage("Invalid Target")
       } else cmd match {
         case "kill" =>
           ar ! KillCmnd(ch(0))
@@ -75,7 +75,7 @@ class Room(
         case "poison" =>
           ar ! PoisonCmnd(ch(0))
         case _ =>
-          ar !  PrintMessage("Unknown command")
+          ar ! PrintMessage("Unknown command")
           println("Unknown command sent.")
       }
 
@@ -130,12 +130,12 @@ class Room(
 
 object Room {
   //Description
-  case class PrintDescription(sender:ActorRef)
+  case class PrintDescription(sender: ActorRef)
   //Inventory Management
-  case class GetItem(name: String, itemName: String)
+  case class GetItem(name: String, itemName: String, pla: ActorRef)
   case class DropItem(name: String, item: Item)
   //Exit Management
-  case class GetExit(dir: Int)
+  case class GetExit(dir: Int, pla: ActorRef)
   case class LinkRooms(rooms: BSTMap[String, ActorRef])
   //Room Character Management
   case class EnterRoom(p: ActorRef, name: String, stealthed: Boolean)

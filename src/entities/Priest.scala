@@ -11,13 +11,14 @@ import adts.MutableDLList
 import java.net.Socket
 import java.io.BufferedReader
 
-class Priest(val name: String,
+class Priest(
+    name: String,
     private var _level: Int,
     private var _health: Double,
     private var _inventory: MutableDLList[Item],
-    val input: BufferedReader,
-    val output: PrintStream,
-    val sock: Socket) extends Player(name, _level, _health, _inventory, input, output, sock) with Actor  {
+    input: BufferedReader,
+    output: PrintStream,
+    sock: Socket) extends Player(name, _level, _health, _inventory, input, output, sock) with Actor {
 
   import Priest._
 
@@ -25,12 +26,12 @@ class Priest(val name: String,
     case ProcessInput => processInput(this, self)
     case PrintMessage(msg) => output.println(msg)
     case AddToInventory(item) => addToInv(item, this)
-    case TakeExit(dir) => takeExit(dir, this,self)
-    case KillCmnd(c) => killCmnd(c, this,self)
+    case TakeExit(dir) => takeExit(dir, this, self)
+    case KillCmnd(c) => killCmnd(c, this, self)
     case AttackNow => attack(this)
-    case SendDamage(loc, dmg) => sendDmg(loc, dmg, this,sender ,self)
+    case SendDamage(loc, dmg) => sendDmg(loc, dmg, this, sender, self)
     case DamageTaken(dmg, alive, hp) => dmgTaken(dmg, alive, hp, this, self)
-    case ResetChar => resetChar(this,self)
+    case ResetChar => resetChar(this, self)
     case ResetVictim => setVictim(None)
     case View(name) => name ! Stats
     case Stats => sender ! PrintMessage("Level: " + level + "\r\nClass: " + className)
@@ -48,7 +49,7 @@ class Priest(val name: String,
     case RemoveMember(pl) =>
       removeMember(pl, this)
     case Stun(c) =>
-      charStun(c, this,self)
+      charStun(c, this, self)
     case Unstun(c) =>
       unstun(c, this, self)
     case HealCmnd(pl) =>

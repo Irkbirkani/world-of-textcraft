@@ -11,13 +11,14 @@ import adts.MutableDLList
 import java.net.Socket
 import mud._
 
-class Rogue(val name: String,
+class Rogue(
+    name: String,
     private var _level: Int,
     private var _health: Double,
     private var _inventory: MutableDLList[Item],
-    val input: BufferedReader,
-    val output: PrintStream,
-    val sock: Socket) extends Player(name, _level, _health, _inventory, input, output, sock) with Actor {
+    input: BufferedReader,
+    output: PrintStream,
+    sock: Socket) extends Player(name, _level, _health, _inventory, input, output, sock) with Actor {
 
   import Rogue._
 

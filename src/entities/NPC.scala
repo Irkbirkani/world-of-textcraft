@@ -149,14 +149,14 @@ class NPC(val name: String,
   def rmvHlth(dmg: Int) = {
     val newHlth = health - dmg
     if (newHlth <= 0) {
-      Main.activityManager ! ActivityManager.Enqueue(450, ResetChar, self  )
+      Main.activityManager ! ActivityManager.Enqueue(450, ResetChar, self)
     } else _health -= dmg
   }
 
   //Movement
   def move(direction: Int): Unit = {
     if (victim.isEmpty) {
-      location ! Room.GetExit(direction)
+      location ! Room.GetExit(direction, self)
     }
   }
 

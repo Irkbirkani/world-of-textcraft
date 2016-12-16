@@ -242,9 +242,9 @@ abstract class Player(
   }
 
   //Move Player
-  private def move(direction: Int): Unit = {
+  private def move(direction: Int, pla: ActorRef): Unit = {
     if (victim.isEmpty) {
-      location ! Room.GetExit(direction)
+      location ! Room.GetExit(direction, pla)
     }
   }
 
@@ -394,18 +394,18 @@ abstract class Player(
       location ! Room.LeaveGame(self, name)
       sock.close()
     } //player movement
-    else if ("north".startsWith(in)) move(0)
-    else if ("south".startsWith(in)) move(1)
-    else if ("east".startsWith(in)) move(2)
-    else if ("west".startsWith(in)) move(3)
-    else if ("up".startsWith(in)) move(4)
-    else if ("down".startsWith(in)) move(5)
+    else if ("north".startsWith(in)) move(0, self)
+    else if ("south".startsWith(in)) move(1, self)
+    else if ("east".startsWith(in)) move(2, self)
+    else if ("west".startsWith(in)) move(3, self)
+    else if ("up".startsWith(in)) move(4, self)
+    else if ("down".startsWith(in)) move(5, self)
     else if ("look".startsWith(in)) location ! Room.PrintDescription
     else if (in.startsWith("shortPath")) Main.roomManager ! RoomManager.ShortPath(location.path.name, in.drop(10))
     //player inventory
     else if (in.length > 0 && "inventory".startsWith(in)) printInventory
     else if (in.startsWith("inspect")) inspectItem(in.trim.drop(8))
-    else if (in.startsWith("get")) location ! Room.GetItem(name, in.trim.drop(4))
+    else if (in.startsWith("get")) location ! Room.GetItem(name, in.trim.drop(4), self)
     else if (in.startsWith("drop")) getFromInventory(in.trim.drop(5)) match {
       case Some(item) =>
         location ! Room.DropItem(name, item)
@@ -432,7 +432,7 @@ abstract class Player(
     else if ("health".startsWith(in)) output.println("Health at: " + health)
     else if ("flee".startsWith(in) && victim.nonEmpty) {
       setVictim(None)
-      location ! Room.GetExit(util.Random.nextInt(5))
+      location ! Room.GetExit(util.Random.nextInt(5), self)
     } //player messaging
     else if (in.startsWith("shout")) {
       Main.playerManager ! PlayerManager.PrintShoutMessage(in.drop(6), name)
