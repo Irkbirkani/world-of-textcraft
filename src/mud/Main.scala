@@ -85,19 +85,19 @@ object Main extends App {
       }
       clas match {
         case "WARRIOR" => 
-           playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Player.playerHealth,
+           playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Warrior.startHealth,
         "FirstRoom", new MutableDLList[Item],
         in, out, sock)
         case "MAGE" =>  
-          playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Player.playerHealth,
+          playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Mage.startHealth,
         "FirstRoom", new MutableDLList[Item],
         in, out, sock)
         case "ROGUE" => 
-          playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Player.playerHealth,
+          playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Rogue.startHealth,
         "FirstRoom", new MutableDLList[Item],
         in, out, sock)
         case "PRIEST" => 
-          playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Player.playerHealth,
+          playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Priest.startHealth,
         "FirstRoom", new MutableDLList[Item],
         in, out, sock)
       }

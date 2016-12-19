@@ -20,10 +20,12 @@ class Priest(
     output: PrintStream,
     sock: Socket) extends Player(name, _level, _health, _inventory, input, output, sock) with Actor {
 
+  addMem(self, location)
+
   import Priest._
 
   def receive = {
-    case ProcessInput => processInput(this, self)
+    case ProcessInput => processInput(this, self, newMem)
     case PrintMessage(msg) => output.println(msg)
     case AddToInventory(item) => addToInv(item, this)
     case TakeExit(dir) => takeExit(dir, this, self)
@@ -37,11 +39,14 @@ class Priest(
     case Stats => sender ! PrintMessage("Level: " + level + "\r\nClass: " + className)
     case SendExp(xp) => party.filter(p => p._2 == location).foreach(p => p._1 ! AddExp(xp))
     case AddExp(xp) => addExp(xp)
-    case SendInvite(pl, pt) =>
-      //TODO refactor to use a "flag" or "mode" system to remove blocking call.
-      invite(pl, pt, this)
-    case AcceptInvite(pl, loc) =>
-      acceptInvite(pl, loc, this)
+    case Invite(pl) =>
+      invite(pl, this)
+    case InviteAccepted(accept, pla) =>
+      inviteAccpt(accept, pla, this, self)
+    case AddToParty(pt, snder) =>
+      addToParty(pt, this, self, snder)
+    case UpdateParty(pl, loc) =>
+      updateParty(pl, loc, this)
     case AddMember(pl, loc) =>
       addMember(pl, loc, this)
     case ChangeLoc(pl, newL) =>
@@ -94,12 +99,13 @@ class Priest(
   val classPower = 150
 
   val dmgReduc = 10
-
-  val hlthInc = 10
+  val startHealth = 110
 
 }
 
 object Priest {
+
+  val startHealth = 110
 
   case object HealCD
 

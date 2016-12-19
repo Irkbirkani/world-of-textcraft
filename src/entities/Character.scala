@@ -9,16 +9,30 @@ object Character {
   import entities.Player._
 
   case object ProcessInput
-  def processInput(pl: Player, pla: ActorRef) = {
+  def processInput(pl: Player, self: ActorRef, inv: ActorRef) = {
     if (pl.input.ready() && !pl.stunned) {
       val in = pl.input.readLine().trim
-      if (in.nonEmpty) {
-        pl.processCommand(in, pla)
+      pl.mode match {
+        case 0 =>
+          if (in.nonEmpty) {
+            pl.processCommand(in, self)
+          }
+        case 1 =>
+          if (in.startsWith("y")) {
+            pl.newMem ! InviteAccepted(true, self)
+            pl.setNewMem(null)
+            pl.changeMode(0)
+          } else {
+            pl.newMem ! InviteAccepted(false, self)
+            pl.setNewMem(null)
+            pl.changeMode(0)
+          }
       }
     }
   }
 
   case class AddToInventory(item: Option[Item])
+
   def addToInv(item: Option[Item], pl: Player) = {
     item match {
       case Some(item) =>
@@ -31,6 +45,7 @@ object Character {
   }
 
   case class TakeExit(dir: Option[ActorRef])
+
   def takeExit(dir: Option[ActorRef], pl: Player, pla: ActorRef) = {
     dir match {
       case Some(dest) =>
@@ -45,6 +60,7 @@ object Character {
   }
 
   case class KillCmnd(victim: ActorRef)
+
   def killCmnd(c: ActorRef, pl: Player, pla: ActorRef) = {
     pl.setVictim(Some(c))
     if (pl.sneaking) {
@@ -62,6 +78,7 @@ object Character {
   }
 
   case object AttackNow
+
   def attack(pl: Player) = {
     if (pl.isAlive && !pl.stunned) {
       pl.victim.foreach(c => c ! SendDamage(pl.location, pl.damage))
@@ -69,6 +86,7 @@ object Character {
   }
 
   case class SendDamage(loc: ActorRef, dmg: Double)
+
   def sendDmg(loc: ActorRef, dmg: Double, pl: Player, sender: ActorRef, pla: ActorRef) = {
     if (loc == pl.location) {
       val realDamage = pl.takeDamage(dmg)
@@ -104,6 +122,7 @@ object Character {
   }
 
   case object ResetChar
+
   def resetChar(pl: Player, pla: ActorRef) = {
     pl.resetHlth
     pl.setAlive
@@ -140,7 +159,7 @@ object Character {
     pl.output.println("You've been stunned!")
   }
   case class Unstun(victim: ActorRef)
-  def unstun(c: ActorRef, pl: Player, pla:ActorRef) = {
+  def unstun(c: ActorRef, pl: Player, pla: ActorRef) = {
     pl.setStun
     pl.output.println("You're no longer stunned!")
     pl.kill(c.path.name, pla)
@@ -155,23 +174,33 @@ object Character {
 
   case class AddExp(xp: Int)
 
-  case class SendInvite(pl: ActorRef, pt: scala.collection.mutable.Map[ActorRef, ActorRef])
-  def invite(pla: ActorRef, pt: scala.collection.mutable.Map[ActorRef, ActorRef], pl: Player) = {
+  case class Invite(pla: ActorRef)
+
+  def invite(pla: ActorRef, pl: Player) = {
     if (pl.party.size <= 1) {
       pl.output.println(pl.makeFstCap(pla.path.name) + " invited you to a group. y/_")
-      val in = pl.input.readLine
-      if ("yes".startsWith(in)) {
-        pl.output.println("You joined the group")
-        pla ! AcceptInvite(pla, pl.location)
-        pl.addParty(pt)
-      } else pla ! PrintMessage(pl.name + " declined your invatation.")
-    } else pla ! PrintMessage(pl.name + " is already in a group!")
+      pl.changeMode(1)
+      pl.setNewMem(pla)
+    } else pla ! PrintMessage(pl.makeFstCap(pl.name) + " is already in a party.")
   }
 
-  case class AcceptInvite(pl: ActorRef, loc: ActorRef)
-  def acceptInvite(pla: ActorRef, loc: ActorRef, pl: Player) = {
+  case class InviteAccepted(accept: Boolean, pla: ActorRef)
+  def inviteAccpt(acc: Boolean, pla: ActorRef, pl: Player, self: ActorRef) = {
+    if (acc) {
+      pla ! AddToParty(pl.party, self)
+    } else pl.output.println(pl.makeFstCap(pla.path.name) + " declined your invitation.")
+  }
+
+  case class AddToParty(pt: scala.collection.mutable.Map[ActorRef, ActorRef], sender: ActorRef)
+  def addToParty(pt: scala.collection.mutable.Map[ActorRef, ActorRef], pl: Player, self: ActorRef, sender: ActorRef) = {
+    pl.output.println("You joined the group")
+    sender ! UpdateParty(self, pl.location)
+    pl.addParty(pt)
+  }
+
+  case class UpdateParty(pl: ActorRef, loc: ActorRef)
+  def updateParty(pla: ActorRef, loc: ActorRef, pl: Player) = {
     pl.party.filter(p => p._1 != pl && p._1 != pla).foreach(p => p._1 ! AddMember(pla, loc))
-    pl.output.println(pl.makeFstCap(pla.path.name) + " joined the group.")
     pl.addMem(pla, loc)
   }
   case class AddMember(pl: ActorRef, loc: ActorRef)
@@ -181,16 +210,18 @@ object Character {
 
   }
   case class ChangeLoc(pl: ActorRef, loc: ActorRef)
+
   def newLocation(pla: ActorRef, loc: ActorRef, pl: Player) = {
     pl.setLoc(pla, loc)
   }
   case class RemoveMember(pl: ActorRef)
+
   def removeMember(pla: ActorRef, pl: Player) = {
     pl.rmvMember(pla)
     pl.output.println((pl.makeFstCap(pla.path.name) + " left the group."))
 
   }
-  
+
   case object Unsneak
 
 }

@@ -5,7 +5,7 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.Props
 import akka.actor.actorRef2Scala
-import Character.{ PrintMessage, SendInvite, ProcessInput }
+import Character.{ PrintMessage, Invite, ProcessInput }
 import java.io.PrintStream
 import java.io.BufferedReader
 import java.net.Socket
@@ -47,12 +47,12 @@ class PlayerManager extends Actor {
         case Some(pl) => pl ! PrintMessage(s"${RESET}${BLUE}$from: $msg${RESET}")
         case None => sender ! PrintMessage(s"Player $to does not exist.")
       }
-    case CheckPlayerExist(pl, pt) =>
+    case CheckPlayerExist(pl, pt, pla) =>
       context.child(pl.toUpperCase) match {
         case Some(p) =>
-          if (p != sender) p ! SendInvite(sender, pt)
-          else sender ! PrintMessage("You cannot invite yourself to a party.")
-        case None => sender ! PrintMessage(s"Player $pl does not exist.")
+          if (p != pla) p ! Invite(pla)
+          else pla ! PrintMessage("You cannot invite yourself to a party.")
+        case None => pla ! PrintMessage(s"Player $pl does not exist.")
       }
   }
 }
@@ -65,5 +65,5 @@ object PlayerManager {
   //Messaging Management
   case class PrintShoutMessage(msg: String, name: String)
   case class PrintTellMessage(to: String, from: String, msg: String)
-  case class CheckPlayerExist(pl: String, party: scala.collection.mutable.Map[ActorRef, ActorRef])
+  case class CheckPlayerExist(pl: String, party: scala.collection.mutable.Map[ActorRef, ActorRef], pla: ActorRef)
 }

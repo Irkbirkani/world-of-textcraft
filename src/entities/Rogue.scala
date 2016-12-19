@@ -20,10 +20,12 @@ class Rogue(
     output: PrintStream,
     sock: Socket) extends Player(name, _level, _health, _inventory, input, output, sock) with Actor {
 
+  addMem(self, location)
+
   import Rogue._
 
   def receive = {
-    case ProcessInput => processInput(this, self)
+    case ProcessInput => processInput(this, self, newMem)
     case PrintMessage(msg) => output.println(msg)
     case AddToInventory(item) => addToInv(item, this)
     case TakeExit(dir) => takeExit(dir, this, self)
@@ -37,11 +39,14 @@ class Rogue(
     case Stats => sender ! PrintMessage("Level: " + level + "\r\nClass: " + className)
     case SendExp(xp) => party.filter(p => p._2 == location).foreach(p => p._1 ! AddExp(xp))
     case AddExp(xp) => addExp(xp)
-    case SendInvite(pl, pt) =>
-      //TODO refactor to use a "flag" or "mode" system to remove blocking call.
-      invite(pl, pt, this)
-    case AcceptInvite(pl, loc) =>
-      acceptInvite(pl, loc, this)
+    case Invite(pl) =>
+      invite(pl, this)
+    case InviteAccepted(accept, pla) =>
+      inviteAccpt(accept, pla, this, self)
+    case AddToParty(pt, snder) =>
+      addToParty(pt, this, self, snder)
+    case UpdateParty(pl, loc) =>
+      updateParty(pl, loc, this)
     case AddMember(pl, loc) =>
       addMember(pl, loc, this)
     case ChangeLoc(pl, newL) =>
@@ -81,6 +86,8 @@ class Rogue(
     else pl.location ! Room.CheckInRoom("poison", vc, pla)
   }
 
+  var sneakCD = false
+
   val abilityPower = 2
   val abilitySpeed = 15
   val abilities = Map("Sneak: become invisible for 1 minute" -> 1) //, "Poison" -> 3)
@@ -92,11 +99,13 @@ class Rogue(
   val classPower = 150
 
   val dmgReduc = 20
+  val startHealth = 115
 
-  val hlthInc = 15
 }
 
 object Rogue {
+
+  val startHealth = 115
 
   case object Sneak
   case object Unsneak

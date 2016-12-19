@@ -25,14 +25,10 @@ abstract class Player(
   import Character._
   import ActivityManager._
 
-  def receive: PartialFunction[Any, Unit]
-
   //location access
   private var _location: ActorRef = null
   def location = _location
   def newLoc(dest: ActorRef) = _location = dest
-
-  //Actor Management
 
   //Inventory Management
   def inventory = _inventory
@@ -178,36 +174,27 @@ abstract class Player(
   val abilityPower: Int
   val abilitySpeed: Int
   val abilities: Map[String, Int]
-
   val className: String
-
   val stamina: Int
-
   val classPower: Int
-
   val dmgReduc: Int
-
-  val hlthInc: Int
 
   def printAbilities = {
     output.println("Abilities:")
     abilities.foreach(a => output.println(a._1 + ": available at level " + a._2))
   }
 
-  var teleCD = false
-  var sneakCD = false
-
   //Health Management
-  val baseHlth = playerHealth + hlthInc
+  val startHealth: Int
   def health = _health
 
   def resetHlth = {
-    _health = playerHealth
+    _health = startHealth
   }
 
   def addHlth(h: Int): Unit = {
     val newHlth = health + h
-    if (newHlth > baseHlth) _health = baseHlth else _health = newHlth
+    if (newHlth > startHealth) _health = startHealth else _health = newHlth
   }
 
   def rmvHlth(dmg: Int, self: ActorRef) = {
@@ -223,14 +210,14 @@ abstract class Player(
       case Some(fd) =>
         fd.itype match {
           case Item.food =>
-            if (health == baseHlth) {
+            if (health == startHealth) {
               output.println("Health at max")
               addToInventory(food.get)
-            } else if ((_health + fd.food) > baseHlth) {
-              _health = baseHlth
+            } else if ((_health + fd.food) > startHealth) {
+              _health = startHealth
               output.println("You ate " + fd.name + ". Health is " + health.toInt)
 
-            } else if ((_health + fd.food) < baseHlth) {
+            } else if ((_health + fd.food) < startHealth) {
               _health += fd.food
               output.println("You ate " + fd.name + ". Health is " + health.toInt)
             }
@@ -285,6 +272,25 @@ abstract class Player(
   private var _party: mutable.Map[ActorRef, ActorRef] = mutable.Map()
 
   def party = _party
+
+  private var _inv = true
+  def inv = _inv
+  def setInv = _inv = !inv
+
+  private var _newMem: ActorRef = null
+  def newMem = _newMem
+  def setNewMem(c: ActorRef) = _newMem = c
+
+  def acceptInv(in: String, self: ActorRef, inv: ActorRef, pt: scala.collection.mutable.Map[ActorRef, ActorRef]) = {
+    if ("yes".startsWith(in)) {
+      output.println("You joined the group")
+      println("      self " + self.path.name + " inv " + inv.path.name)
+      inv ! UpdateParty(self, location)
+      self ! UpdateParty(inv, location)
+      addParty(pt)
+    } else self ! PrintMessage(makeFstCap(inv.path.name) + " declined your invite")
+    changeMode(0)
+  }
 
   def setLoc(pl: ActorRef, newLoc: ActorRef) = _party(pl) = newLoc
 
@@ -378,7 +384,7 @@ abstract class Player(
     Main.roomManager ! RoomManager.ShortPath(location.path.name, room)
   }
 
-  //Player Tell Messaging
+  //Player Messaging
   def tellMessage(s: String): Unit = {
     val Array(_, to, msg) = s.split(" +", 3)
     Main.playerManager ! PlayerManager.PrintTellMessage(to, name, msg)
@@ -389,6 +395,13 @@ abstract class Player(
   }
 
   //Process Player Input
+  private var _mode = 0 //mode 0 -> process input, mode 1 -> party invite
+  def mode = _mode
+
+  def changeMode(mode: Int) = {
+    _mode = mode
+  }
+
   def processCommand(in: String, self: ActorRef): Unit = {
     //player quit
     if ("quit".startsWith(in)) {
@@ -402,7 +415,7 @@ abstract class Player(
     else if ("west".startsWith(in)) move(3, self)
     else if ("up".startsWith(in)) move(4, self)
     else if ("down".startsWith(in)) move(5, self)
-    else if ("look".startsWith(in)) location ! Room.PrintDescription
+    else if ("look".startsWith(in)) location ! Room.PrintDescription(self)
     else if (in.startsWith("getto")) Main.roomManager ! RoomManager.ShortPath(location.path.name, in.drop(6))
     //player inventory
     else if (in.length > 0 && "inventory".startsWith(in)) printInventory
@@ -436,12 +449,12 @@ abstract class Player(
       setVictim(None)
       location ! Room.GetExit(util.Random.nextInt(5), self)
     } //player messaging
-    else if (in.startsWith("shout")) {
-      Main.playerManager ! PlayerManager.PrintShoutMessage(in.drop(6), name)
-    } else if (in.startsWith("say")) location ! Room.SayMessage(in.drop(4), name)
-    else if (in.startsWith("tell")) tellMessage(in)
+    else if (in.startsWith("/y")) {
+      Main.playerManager ! PlayerManager.PrintShoutMessage(in.drop(3), name)
+    } else if (in.startsWith("/s")) location ! Room.SayMessage(in.drop(3), name)
+    else if (in.startsWith("/w")) tellMessage(in)
     //party commands
-    else if (in.startsWith("invite")) Main.playerManager ! PlayerManager.CheckPlayerExist(in.drop(7), party)
+    else if (in.startsWith("invite")) Main.playerManager ! PlayerManager.CheckPlayerExist(in.drop(7), party, self)
     else if ("party".startsWith(in)) printParty
     else if (in.startsWith("leave")) leaveParty(self)
     else if (in.startsWith("/p")) partyChat(in.drop(3), self)
@@ -461,10 +474,9 @@ abstract class Player(
 
 object Player {
 
- 
   val startLvl = 1
 
   val punchDamage = 3
   val punchSpeed = 10
-  val playerHealth = 100.0
+
 }
