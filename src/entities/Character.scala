@@ -11,7 +11,8 @@ object Character {
   case object ProcessInput
   def processInput(pl: Player, self: ActorRef, inv: ActorRef) = {
     if (pl.input.ready() && !pl.stunned) {
-      val in = pl.input.readLine().trim
+      var in = pl.input.readLine()
+      if (in.startsWith("\t")) in = "\t" + in.trim else in = in.trim 
       pl.mode match {
         case 0 =>
           if (in.nonEmpty) {

@@ -259,7 +259,6 @@ abstract class Player(
       output.println("You are now level " + level + "!")
       if (level % 2 != 0) {
         modifier += 1
-
       }
     }
   }
@@ -323,6 +322,7 @@ abstract class Player(
   }
 
   def partyChat(msg: String, self: ActorRef) = {
+    setTabRemem("/p")
     party.filter(p => p._1 != self).foreach(p => p._1 ! PrintMessage({ RESET } + { GREEN } + name + ": " + msg + { RESET }))
   }
 
@@ -386,7 +386,8 @@ abstract class Player(
 
   //Player Messaging
   def tellMessage(s: String): Unit = {
-    val Array(_, to, msg) = s.split(" +", 3)
+    val Array(msgCode, to, msg) = s.split(" +", 3)
+    setTabRemem(msgCode + " " + to)
     Main.playerManager ! PlayerManager.PrintTellMessage(to, name, msg)
   }
 
@@ -400,6 +401,18 @@ abstract class Player(
 
   def changeMode(mode: Int) = {
     _mode = mode
+  }
+
+  private var _tabRemember = "/s"
+  def tabRemember = _tabRemember
+  def setTabRemem(in: String) = _tabRemember = in
+
+  def tabMessage(in: String, self: ActorRef) = {
+    val msg = in.trim
+    if (tabRemember.startsWith("/s")) location ! Room.SayMessage(msg, name)
+    else if (tabRemember.startsWith("/p")) partyChat(msg, self)
+    else if (tabRemember.startsWith("/y")) Main.playerManager ! PlayerManager.PrintShoutMessage(msg, name)
+    else if (tabRemember.startsWith("/w")) tellMessage(tabRemember + " " + msg)
   }
 
   def processCommand(in: String, self: ActorRef): Unit = {
@@ -451,8 +464,12 @@ abstract class Player(
     } //player messaging
     else if (in.startsWith("/y")) {
       Main.playerManager ! PlayerManager.PrintShoutMessage(in.drop(3), name)
-    } else if (in.startsWith("/s")) location ! Room.SayMessage(in.drop(3), name)
-    else if (in.startsWith("/w")) tellMessage(in)
+      setTabRemem("/y")
+    } else if (in.startsWith("/s")) {
+      location ! Room.SayMessage(in.drop(3), name)
+      setTabRemem("/s")
+    } else if (in.startsWith("/w")) tellMessage(in)
+    else if (in.startsWith("\t")) tabMessage(in, self)
     //party commands
     else if (in.startsWith("invite")) Main.playerManager ! PlayerManager.CheckPlayerExist(in.drop(7), party, self)
     else if ("party".startsWith(in)) printParty
