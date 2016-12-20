@@ -12,7 +12,7 @@ object Character {
   def processInput(pl: Player, self: ActorRef, inv: ActorRef) = {
     if (pl.input.ready() && !pl.stunned) {
       var in = pl.input.readLine()
-      if (in.startsWith("\t")) in = "\t" + in.trim else in = in.trim 
+      if (in.startsWith("\t")) in = "\t" + in.trim else in = in.trim
       pl.mode match {
         case 0 =>
           if (in.nonEmpty) {
@@ -74,21 +74,21 @@ object Character {
       pl.setVictim(None)
     } else {
       pl.output.println("You are hitting " + pl.makeFstCap(c.path.name))
-      Main.activityManager ! Enqueue(pl.speed, AttackNow, pla)
+      Main.activityManager ! Enqueue(pl.speed, AttackNow(pla), pla)
     }
   }
 
-  case object AttackNow
+  case class AttackNow(sender: ActorRef)
 
-  def attack(pl: Player) = {
+  def attack(pl: Player, sender: ActorRef) = {
     if (pl.isAlive && !pl.stunned) {
-      pl.victim.foreach(c => c ! SendDamage(pl.location, pl.damage))
+      pl.victim.foreach(c => c ! SendDamage(pl.location, pl.damage, sender))
     }
   }
 
-  case class SendDamage(loc: ActorRef, dmg: Double)
+  case class SendDamage(loc: ActorRef, dmg: Double, sender: ActorRef)
 
-  def sendDmg(loc: ActorRef, dmg: Double, pl: Player, sender: ActorRef, pla: ActorRef) = {
+  def sendDmg(loc: ActorRef, dmg: Double, pl: Player, pla: ActorRef, sender:ActorRef) = {
     if (loc == pl.location) {
       val realDamage = pl.takeDamage(dmg)
       sender ! DamageTaken(realDamage, pl.isAlive, pl.health.toInt)
@@ -96,16 +96,16 @@ object Character {
       if (!pl.isAlive) {
         pl.clearInventory
         pl.location ! Room.HasDied(pla, pl.name)
-        sender ! ResetVictim
-        sender ! SendExp(pl.pvpXP)
+        pla ! ResetVictim
+        pla ! SendExp(pl.pvpXP)
         pl.setVictim(None)
         Main.activityManager ! Enqueue(50, ResetChar, pla)
       } else if (pl.victim.isEmpty) {
-        pl.setVictim(Some(sender))
-        Main.activityManager ! Enqueue(pl.speed, AttackNow, pla)
+        pl.setVictim(Some(pla))
+        Main.activityManager ! Enqueue(pl.speed, AttackNow(pla), pla)
       }
     } else {
-      sender ! PrintMessage("You are having a hard time finding them.")
+      pla ! PrintMessage("You are having a hard time finding them.")
     }
   }
 
@@ -117,7 +117,7 @@ object Character {
         pl.makeFstCap(pl.victim.get.path.name) + " has " + hp + " health left!")
       pl.kill(pl.victim.get.path.name, pla)
     } else if (pl.victim.nonEmpty) {
-      pl.output.println("you killed " + pl.victim.get.path.name + ".")
+      pl.output.println("you killed " + pl.makeFstCap(pl.victim.get.path.name) + ".")
       pl.setVictim(None)
     }
   }

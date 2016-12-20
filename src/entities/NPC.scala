@@ -46,24 +46,24 @@ class NPC(val name: String,
       }
     case KillCmnd(c) =>
       var victim = c
-      Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow, self)
-    case AttackNow =>
-      if (!stunned) victim.foreach(c => c ! SendDamage(location, attack))
-    case SendDamage(loc, dmg) =>
+      Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow(self), self)
+    case AttackNow(send) =>
+      if (!stunned) victim.foreach(c => c ! SendDamage(location, attack, send))
+    case SendDamage(loc, dmg, send) =>  
       if (loc == location) {
         val realDamage = takeDamage(dmg)
-        sender ! DamageTaken(realDamage, isAlive, health.toInt)
+        send ! DamageTaken(realDamage, isAlive, health.toInt)
         if (!isAlive) {
           location ! Room.HasDied(self, name)
           Main.activityManager ! ActivityManager.Enqueue(450, ResetChar, self)
-          sender ! ResetVictim
-          sender ! SendExp(exp)
+          send ! ResetVictim
+          send ! SendExp(exp)
           victim = None
           dropItems
           _location = null
         } else if (victim.isEmpty) {
-          victim = Some(sender)
-          Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow, self)
+          victim = Some(send)
+          Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow(send), self)
         }
       }
     case DamageTaken(dmg, alive, hp) =>

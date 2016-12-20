@@ -21,6 +21,7 @@ class Mage(
     sock: Socket) extends Player(name, _level, _health, _inventory, input, output, sock) with Actor {
 
   addMem(self, location)
+
   import Mage._
 
   def receive = {
@@ -29,8 +30,8 @@ class Mage(
     case AddToInventory(item) => addToInv(item, this)
     case TakeExit(dir) => takeExit(dir, this, self)
     case KillCmnd(c) => killCmnd(c, this, self)
-    case AttackNow => attack(this)
-    case SendDamage(loc, dmg) => sendDmg(loc, dmg, this, sender, self)
+    case AttackNow(send) => attack(this, send)
+    case SendDamage(loc, dmg, send) => sendDmg(loc, dmg, this, self, sender)
     case DamageTaken(dmg, alive, hp) => dmgTaken(dmg, alive, hp, this, self)
     case ResetChar => resetChar(this, self)
     case ResetVictim => setVictim(None)

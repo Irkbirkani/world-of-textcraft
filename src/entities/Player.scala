@@ -192,7 +192,7 @@ abstract class Player(
     _health = startHealth
   }
 
-  def addHlth(h: Int): Unit = {
+  def addHlth(h: Double): Unit = {
     val newHlth = health + h
     if (newHlth > startHealth) _health = startHealth else _health = newHlth
   }
@@ -213,13 +213,9 @@ abstract class Player(
             if (health == startHealth) {
               output.println("Health at max")
               addToInventory(food.get)
-            } else if ((_health + fd.food) > startHealth) {
-              _health = startHealth
-              output.println("You ate " + fd.name + ". Health is " + health.toInt)
-
-            } else if ((_health + fd.food) < startHealth) {
-              _health += fd.food
-              output.println("You ate " + fd.name + ". Health is " + health.toInt)
+            } else {
+              addHlth(fd.food)
+              output.println("You ate " + fd.name + ". Health is at " + health)
             }
           case _ =>
             output.println("You can't eat that.")
