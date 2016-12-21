@@ -32,7 +32,32 @@ object Main extends App {
       val sock = ss.accept()
       val in = new BufferedReader(new InputStreamReader(sock.getInputStream))
       val out = new PrintStream(sock.getOutputStream)
-      makePlayer(in, out, sock)
+      startScreen(in, out, sock)
+    }
+  }
+
+  def startScreen(in: BufferedReader, out: PrintStream, sock: Socket) = {
+    Future {
+      out.println("Welcome to\r")
+      out.println({ RESET } + { RED } +
+        """ _    _            _     _          __   _____         _                  __ _   """ + "\r")
+      out.println("""| |  | |          | |   | |        / _| |_   _|       | |                / _| |  """ + "\r")
+      out.println("""| |  | | ___  _ __| | __| |   ___ | |_    | | _____  _| |_ ___ _ __ __ _| |_| |_ """ + "\r")
+      out.println("""| |/\| |/ _ \| '__| |/ _` |  / _ \|  _|   | |/ _ \ \/ / __/ __| '__/ _` |  _| __|""" + "\r")
+      out.println("""\  /\  / (_) | |  | | (_| | | (_) | |     | |  __/>  <| || (__| | | (_| | | | |_ """ + "\r")
+      out.println(""" \/  \/ \___/|_|  |_|\__,_|  \___/|_|     \_/\___/_/\_\\__\___|_|  \__,_|_|  \__|""" + "\r\n" + { RESET })
+
+      out.println("It this is your first time type " + { RESET } + { BOLD } + { GREEN } + " new" + { RESET } + ".\r")
+      out.println("If you have an account, type your username.\r")
+      out.print("-> ")
+
+      var text = (in.readLine().trim).filter(x => x.isLetter).toUpperCase
+      text match {
+        case "NEW" => makePlayer(in, out, sock)
+        case _ =>
+          out.println("We dont have accounts yet....")
+          makePlayer(in, out, sock)
+      }
     }
   }
 
@@ -41,15 +66,6 @@ object Main extends App {
       name.length < 3 || name.contains(" ")
     }
     Future {
-      out.println("Welcome to\r")
-      out.println({ RESET } + { RED } +
-                  """ _    _            _     _          __   _____         _                  __ _   """ + "\r")
-      out.println("""| |  | |          | |   | |        / _| |_   _|       | |                / _| |  """ + "\r")
-      out.println("""| |  | | ___  _ __| | __| |   ___ | |_    | | _____  _| |_ ___ _ __ __ _| |_| |_ """ + "\r")
-      out.println("""| |/\| |/ _ \| '__| |/ _` |  / _ \|  _|   | |/ _ \ \/ / __/ __| '__/ _` |  _| __|""" + "\r")
-      out.println("""\  /\  / (_) | |  | | (_| | | (_) | |     | |  __/>  <| || (__| | | (_| | | | |_ """ + "\r")
-      out.println(""" \/  \/ \___/|_|  |_|\__,_|  \___/|_|     \_/\___/_/\_\\__\___|_|  \__,_|_|  \__|""" + "\r\n" + { RESET })
-
       out.println("What is your name?\r\n3 or more characters. Letters only.")
       out.print("-> ")
       var name = (in.readLine().trim).filter(x => x.isLetter)
@@ -59,18 +75,18 @@ object Main extends App {
         name = (in.readLine().trim).filter(x => x.isLetter)
       }
       out.print("Choose a Class:\r\n\n")
-      out.print({ RESET } + { RED } + 
-                "Warrior->        Warriors are heavy hitters on the battle field.\n\r")
+      out.print({ RESET } + { RED } +
+        "Warrior->        Warriors are heavy hitters on the battle field.\n\r")
       out.print("                 They have high damage reduction and are at their\n\r")
       out.print("                 best in the midst of battle.\n\r\n")
       out.print({ RESET } + { CYAN } +
-                "Mage->           Mages are highly intellectual. They bombard their\r\n")
+        "Mage->           Mages are highly intellectual. They bombard their\r\n")
       out.print("                 foes with a multitude of attacks.\n\r\n")
-      out.print({ RESET } + { GREEN } + 
-                "Rogue->          Rogues are creatures of the dark. They sneak around\r\n")
+      out.print({ RESET } + { GREEN } +
+        "Rogue->          Rogues are creatures of the dark. They sneak around\r\n")
       out.print("                 poisoning their targets and disapear into the dark.\r\n\n")
       out.print({ RESET } + { YELLOW } +
-                "Priest->         Priests are pure in heart. They are able to heal their \r\n")
+        "Priest->         Priests are pure in heart. They are able to heal their \r\n")
       out.print("                 allies and help increase their atack power.\n\r\n" + { RESET })
       out.print("-> ")
 
@@ -84,22 +100,22 @@ object Main extends App {
         clas = in.readLine().trim.toUpperCase()
       }
       clas match {
-        case "WARRIOR" => 
-           playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Warrior.startHealth,
-        "FirstRoom", new MutableDLList[Item],
-        in, out, sock)
-        case "MAGE" =>  
-          playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Mage.startHealth,
-        "FirstRoom", new MutableDLList[Item],
-        in, out, sock)
-        case "ROGUE" => 
-          playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Rogue.startHealth,
-        "FirstRoom", new MutableDLList[Item],
-        in, out, sock)
-        case "PRIEST" => 
-          playerManager ! PlayerManager.NewPlayer(clas,name, Player.startLvl, Priest.startHealth,
-        "FirstRoom", new MutableDLList[Item],
-        in, out, sock)
+        case "WARRIOR" =>
+          playerManager ! PlayerManager.NewPlayer(clas, name, Player.startLvl, Warrior.startHealth,
+            "FirstRoom", new MutableDLList[Item],
+            in, out, sock)
+        case "MAGE" =>
+          playerManager ! PlayerManager.NewPlayer(clas, name, Player.startLvl, Mage.startHealth,
+            "FirstRoom", new MutableDLList[Item],
+            in, out, sock)
+        case "ROGUE" =>
+          playerManager ! PlayerManager.NewPlayer(clas, name, Player.startLvl, Rogue.startHealth,
+            "FirstRoom", new MutableDLList[Item],
+            in, out, sock)
+        case "PRIEST" =>
+          playerManager ! PlayerManager.NewPlayer(clas, name, Player.startLvl, Priest.startHealth,
+            "FirstRoom", new MutableDLList[Item],
+            in, out, sock)
       }
     }
   }
