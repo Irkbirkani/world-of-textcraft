@@ -13,10 +13,8 @@ class RoomManager extends Actor {
   import entities.Mage._
   //Actor Management
   def receive = {
-    case EnterRoom(loc, p) =>
-      p ! Character.TakeExit(Some(rooms(loc.toUpperCase)))
-    case LinkingRooms(key, exits) =>
-      roomExits += (key -> exits)
+    case EnterRoom(loc, p) => p ! Character.TakeExit(Some(rooms(loc.toUpperCase)))
+    case LinkingRooms(key, exits) => roomExits += (key -> exits)
     case ShortPath(curr, dest) =>
       val path = shortestPath(curr, dest, roomExits, List())
       path.foreach(a => if (a.nonEmpty) sender ! PrintMessage(a))

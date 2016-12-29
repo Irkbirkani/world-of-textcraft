@@ -40,6 +40,7 @@ object Main extends App {
     Future {
       out.println("Welcome to\r")
       out.println({ RESET } + { RED } +
+        /**     */
         """ _    _            _     _          __   _____         _                  __ _   """ + "\r")
       out.println("""| |  | |          | |   | |        / _| |_   _|       | |                / _| |  """ + "\r")
       out.println("""| |  | | ___  _ __| | __| |   ___ | |_    | | _____  _| |_ ___ _ __ __ _| |_| |_ """ + "\r")
@@ -47,23 +48,34 @@ object Main extends App {
       out.println("""\  /\  / (_) | |  | | (_| | | (_) | |     | |  __/>  <| || (__| | | (_| | | | |_ """ + "\r")
       out.println(""" \/  \/ \___/|_|  |_|\__,_|  \___/|_|     \_/\___/_/\_\\__\___|_|  \__,_|_|  \__|""" + "\r\n" + { RESET })
 
-      out.println("It this is your first time type " + { RESET } + { BOLD } + { GREEN } + " new" + { RESET } + ".\r")
-      out.println("If you have an account, type your username.\r")
-      out.print("-> ")
+      makePlayer(in, out, sock)
 
-      var text = (in.readLine().trim).filter(x => x.isLetter).toUpperCase
-      text match {
-        case "NEW" => makePlayer(in, out, sock)
-        case _ =>
-          out.println("We dont have accounts yet....")
-          makePlayer(in, out, sock)
-      }
+      //      out.println("It this is your first time type " + { RESET } + { BOLD } + { GREEN } + " new" + { RESET } + ".\r")
+      //      out.println("If you have an account, type your username.\r")
+      //      out.print("-> ")
+      //
+      //      var text = (in.readLine().trim).filter(x => x.isLetter).toUpperCase
+      //      text match {
+      //        case "NEW" => makePlayer(in, out, sock)
+      //        case _ => signIn(text, in, out, sock)
+      //      }
+    }
+  }
+
+  def signIn(name: String, in: BufferedReader, out: PrintStream, sock: Socket) = {
+    Future {
+      out.print("Enter your password: ")
+      var pass = in.readLine().trim
+      playerManager ! PlayerManager.FindChild(name, pass, in, out, sock)
     }
   }
 
   def makePlayer(in: BufferedReader, out: PrintStream, sock: Socket) = {
     def nameCheck(name: String): Boolean = {
       name.length < 3 || name.contains(" ")
+    }
+    def passCheck(pass: String): Boolean = {
+      pass.length >= 6 && pass.filter(_.isUpper).length >= 1 && pass.filter(_.isDigit).length >= 1
     }
     Future {
       out.println("What is your name?\r\n3 or more characters. Letters only.")
@@ -74,6 +86,15 @@ object Main extends App {
         out.print("-> ")
         name = (in.readLine().trim).filter(x => x.isLetter)
       }
+//      out.println("Password:\r\nPasswords must be at least six characters, have one uppercase letter, and one number..\r")
+//      out.print("-> ")
+//      var pass = in.readLine().trim
+//      while (!passCheck(pass)) {
+//        out.println("Invalid password. Try again.")
+//        out.print("-> ")
+//        pass = (in.readLine().trim)
+//      }
+
       out.print("Choose a Class:\r\n\n")
       out.print({ RESET } + { RED } +
         "Warrior->        Warriors are heavy hitters on the battle field.\n\r")
@@ -101,19 +122,19 @@ object Main extends App {
       }
       clas match {
         case "WARRIOR" =>
-          playerManager ! PlayerManager.NewPlayer(clas, name, Player.startLvl, Warrior.startHealth,
+          playerManager ! PlayerManager.NewPlayer(clas, name, "", Player.startLvl, Warrior.startHealth,
             "FirstRoom", new MutableDLList[Item],
             in, out, sock)
         case "MAGE" =>
-          playerManager ! PlayerManager.NewPlayer(clas, name, Player.startLvl, Mage.startHealth,
+          playerManager ! PlayerManager.NewPlayer(clas, name, "", Player.startLvl, Mage.startHealth,
             "FirstRoom", new MutableDLList[Item],
             in, out, sock)
         case "ROGUE" =>
-          playerManager ! PlayerManager.NewPlayer(clas, name, Player.startLvl, Rogue.startHealth,
+          playerManager ! PlayerManager.NewPlayer(clas, name, "", Player.startLvl, Rogue.startHealth,
             "FirstRoom", new MutableDLList[Item],
             in, out, sock)
         case "PRIEST" =>
-          playerManager ! PlayerManager.NewPlayer(clas, name, Player.startLvl, Priest.startHealth,
+          playerManager ! PlayerManager.NewPlayer(clas, name, "", Player.startLvl, Priest.startHealth,
             "FirstRoom", new MutableDLList[Item],
             in, out, sock)
       }

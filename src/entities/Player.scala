@@ -14,12 +14,13 @@ import scala.Console._
 
 abstract class Player(
     val name: String,
+    val password: String,
     private var _level: Int,
     private var _health: Double,
     private var _inventory: MutableDLList[Item],
-    val input: BufferedReader,
-    val output: PrintStream,
-    val sock: Socket) {
+    private var _input: BufferedReader,
+    private var _output: PrintStream,
+    private var _sock: Socket) {
 
   import Player._
   import Character._
@@ -29,6 +30,15 @@ abstract class Player(
   private var _location: ActorRef = null
   def location = _location
   def newLoc(dest: ActorRef) = _location = dest
+
+  def input = _input
+  def setInput(in: BufferedReader) = _input = in
+
+  def output = _output
+  def setOutput(out: PrintStream) = _output = out
+
+  def sock = _sock
+  def setSock(s: Socket) = _sock = s
 
   //Inventory Management
   def inventory = _inventory
@@ -84,6 +94,8 @@ abstract class Player(
   //Equipment management
   private var _equipment: List[EquippedItem] = List()
   def equipment = _equipment
+
+  val armorReduc = 0.1
 
   def equip(itemName: String): Unit = {
     getFromInventory(itemName) match {
@@ -335,23 +347,9 @@ abstract class Player(
   def stunned = _stunned
   def setStun = _stunned = !stunned
 
-  private var _poisoned = false
-  def poisoned = _poisoned
-  def setPoisoned = _poisoned = !poisoned
-
   private var _sneaking = false
   def sneaking = _sneaking
   def setSneak = _sneaking = !sneaking
-
-  def poison(dmg: Int, self: ActorRef) = {
-    var count = 3
-    while (poisoned) {
-      if (count == 0) {
-        Main.activityManager ! ActivityManager.Enqueue(20, Poisoned(dmg), self)
-        count = 3
-      } else count -= 1
-    }
-  }
 
   def kill(pl: String, self: ActorRef): Unit = {
     location ! Room.CheckInRoom("kill", pl.toUpperCase(), self)
@@ -361,10 +359,8 @@ abstract class Player(
 
   def takeDamage(dmg: Double) = {
     val damage = d6
-    val actDmg = if (damage == 0) 0
-    else if (damage >= 1 && damage <= 5) dmg
-    else dmg * 2
-    val totalDmg = if (actDmg - ((armor + dmgReduc) * armorReduc) < 0) 0 else actDmg - (armor + dmgReduc) * armorReduc
+    val actDmg = if (damage == 0) 0 else if (damage >= 1 && damage <= 5) dmg else dmg * 2
+    val totalDmg = if (actDmg - ((armor + dmgReduc) * armorReduc) <= 0) 0 else actDmg - (armor + dmgReduc) * armorReduc
     _health -= totalDmg
     if (_health <= 0) {
       setAlive
@@ -455,7 +451,6 @@ abstract class Player(
     else if (in.startsWith("kill")) kill(in.drop(5), self)
     else if ("health".startsWith(in)) output.println("Health at: " + health)
     else if ("flee".startsWith(in) && victim.nonEmpty) {
-      setVictim(None)
       location ! Room.GetExit(util.Random.nextInt(5), self)
     } //player messaging
     else if (in.startsWith("/y")) {

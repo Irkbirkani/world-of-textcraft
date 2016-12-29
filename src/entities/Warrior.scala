@@ -14,12 +14,13 @@ import mud._
 
 class Warrior(
     name: String,
+    password: String,
     private var _level: Int,
     private var _health: Double,
     private var _inventory: MutableDLList[Item],
     input: BufferedReader,
     output: PrintStream,
-    sock: Socket) extends Player(name, _level, _health, _inventory, input, output, sock) with Actor {
+    sock: Socket) extends Player(name, password, _level, _health, _inventory, input, output, sock) with Actor {
 
   addMem(self, location)
 
@@ -27,6 +28,8 @@ class Warrior(
 
   def receive = {
     case ProcessInput => processInput(this, self, newMem)
+    case CheckPass(pass, in, out, sock) => checkPass(pass, this, self, in, out, sock)
+    case EnterGame(loc) => enterGame(loc, this, self)
     case PrintMessage(msg) => output.println(msg)
     case AddToInventory(item) => addToInv(item, this)
     case TakeExit(dir) => takeExit(dir, this, self)
@@ -40,22 +43,15 @@ class Warrior(
     case Stats => sender ! PrintMessage("Level: " + level + "\r\nClass: " + className)
     case SendExp(xp) => party.filter(p => p._2 == location).foreach(p => p._1 ! AddExp(xp))
     case AddExp(xp) => addExp(xp)
-    case Invite(pl) =>
-      invite(pl, this)
-    case InviteAccepted(accept, pla) =>
-      inviteAccpt(accept, pla, this, self)
-    case AddToParty(pt, snder) =>
-      addToParty(pt, this, self, snder)
-    case UpdateParty(pl, loc) =>
-      updateParty(pl, loc, this)
-    case AddMember(pl, loc) =>
-      addMember(pl, loc, this)
-    case ChangeLoc(pl, newL) =>
-      newLocation(pl, newL, this)
-    case RemoveMember(pl) =>
-      removeMember(pl, this)
-    case ReceiveHeal(hl) =>
-      receiveHeal(hl, this, sender)
+    case Invite(pl) => invite(pl, this)
+    case InviteAccepted(accept, pla) => inviteAccpt(accept, pla, this, self)
+    case AddToParty(pt, snder) => addToParty(pt, this, self, snder)
+    case UpdateParty(pl, loc) => updateParty(pl, loc, this)
+    case AddMember(pl, loc) => addMember(pl, loc, this)
+    case ChangeLoc(pl, newL) => newLocation(pl, newL, this)
+    case RemoveMember(pl) => removeMember(pl, this)
+    case ReceiveHeal(hl) => receiveHeal(hl, this, sender)
+    case SendDOT(dmg, dotType, send) => sendDOT(dmg, this, self, dotType, send)
     case StunCmnd(c) =>
       setVictim(Some(c))
       if (victim.get == self) {

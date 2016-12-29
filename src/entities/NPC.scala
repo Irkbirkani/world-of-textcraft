@@ -49,7 +49,7 @@ class NPC(val name: String,
       Main.activityManager ! ActivityManager.Enqueue(speed, AttackNow(self), self)
     case AttackNow(send) =>
       if (!stunned) victim.foreach(c => c ! SendDamage(location, attack, send))
-    case SendDamage(loc, dmg, send) =>  
+    case SendDamage(loc, dmg, send) =>
       if (loc == location) {
         val realDamage = takeDamage(dmg)
         send ! DamageTaken(realDamage, isAlive, health.toInt)
@@ -90,21 +90,28 @@ class NPC(val name: String,
     case ReceiveHeal(hl) =>
       addHlth(hl)
       sender ! PrintMessage("Healed " + name + " for " + hl + "!")
-    case Poisoned(dmg) =>
-      poisoned = true
-      if (poisoned) {
-        rmvHlth(dmg)
-        poison(dmg)
-      }
-      Main.activityManager ! ActivityManager.Enqueue(100, Unpoison, self)
-    case Unpoison =>
-      poisoned = false
     case Stun(c) =>
       stunned = true
       Main.activityManager ! ActivityManager.Enqueue(30, Unstun(c), self)
     case Unstun(c) =>
       stunned = false
       kill(c.path.name)
+    case SendDOT(dmg, dotType, send) =>
+      _health -= dmg
+      send ! DOTTaken(dmg, isAlive, health.toInt, dotType, self)
+      send ! CheckDOT
+      if (!isAlive) {
+        location ! Room.HasDied(self, name)
+        Main.activityManager ! ActivityManager.Enqueue(450, ResetChar, self)
+        send ! ResetVictim
+        send ! SendExp(exp)
+        victim = None
+        dropItems
+        _location = null
+        self ! ResetDOT(dotType)
+        Main.activityManager ! ActivityManager.Enqueue(50, ResetChar, self)
+      }
+
   }
   //Combat Management
   def kill(pl: String): Unit = {
@@ -113,18 +120,8 @@ class NPC(val name: String,
 
   var isAlive = true
   var stunned = false
-  var poisoned = false
 
-  def poison(dmg: Int) = {
-    var count = 3
-    while (poisoned) {
-      if (count == 0) {
-        Main.activityManager ! ActivityManager.Enqueue(20, Poisoned(dmg), self)
-        count = 3
-      } else count -= 1
-    }
-  }
-
+  val armorReduc = 0.1
   def dmgReduction = armor * armorReduc
 
   def d6 = util.Random.nextInt(6) + 1

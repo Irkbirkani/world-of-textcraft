@@ -4,9 +4,29 @@ import akka.actor.ActorRef
 import room._
 import mud.Main
 import mud.ActivityManager._
+import java.io.PrintStream
+import java.net.Socket
+import java.io.BufferedReader
 
 object Character {
-  import entities.Player._
+  import Player._
+
+  case class CheckPass(pass: String, in: BufferedReader, out: PrintStream, sock: Socket)
+
+  def checkPass(pass: String, pl: Player, pla: ActorRef, in: BufferedReader, out: PrintStream, sock: Socket) = {
+    if (pass == pl.password) {
+      pl.setInput(in)
+      pl.setOutput(out)
+      pl.setSock(sock)
+      println(pl.location.path.name)
+      pl.output.println("Login Successful.")
+      pla ! EnterGame(pl.location)
+      println(pla.path.name)
+    } else {
+      out.println("Invalid password. Try again.")
+      Main.startScreen(in, out, sock)
+    }
+  }
 
   case object ProcessInput
   def processInput(pl: Player, self: ActorRef, inv: ActorRef) = {
@@ -45,6 +65,7 @@ object Character {
     }
   }
 
+  //Exit case classes
   case class TakeExit(dir: Option[ActorRef])
 
   def takeExit(dir: Option[ActorRef], pl: Player, pla: ActorRef) = {
@@ -60,12 +81,19 @@ object Character {
     }
   }
 
+  case class EnterGame(loc: ActorRef)
+  def enterGame(loc: ActorRef, pl: Player, pla: ActorRef) = {
+    pl.location ! Room.EnterRoom(pla, pl.makeFstCap(pl.name), pl.sneaking)
+    pl.location ! Room.PrintDescription(pla)
+  }
+
+  // Basic combat case classes
   case class KillCmnd(victim: ActorRef)
 
   def killCmnd(c: ActorRef, pl: Player, pla: ActorRef) = {
     pl.setVictim(Some(c))
     if (pl.sneaking) {
-      pla ! Unsneak
+      pla ! Rogue.Unsneak
     } else if (pl.victim.get == pla) {
       pl.output.println("You cannot kill yourself.")
       pl.setVictim(None)
@@ -88,23 +116,24 @@ object Character {
 
   case class SendDamage(loc: ActorRef, dmg: Double, sender: ActorRef)
 
-  def sendDmg(loc: ActorRef, dmg: Double, pl: Player, pla: ActorRef, sender:ActorRef) = {
+  def sendDmg(loc: ActorRef, dmg: Double, pl: Player, pla: ActorRef, sender: ActorRef) = {
     if (loc == pl.location) {
       val realDamage = pl.takeDamage(dmg)
       sender ! DamageTaken(realDamage, pl.isAlive, pl.health.toInt)
-      pl.output.println(pl.makeFstCap(sender.path.name) + " dealt " + realDamage + " damage! Health is at " + pl.health)
+      pl.output.println(pl.makeFstCap(sender.path.name) + " dealt " + realDamage + " damage! Health is at " + (if (pl.health <= 0) 0 else pl.health))
       if (!pl.isAlive) {
         pl.clearInventory
         pl.location ! Room.HasDied(pla, pl.name)
-        pla ! ResetVictim
-        pla ! SendExp(pl.pvpXP)
+        sender ! ResetVictim
+        sender ! SendExp(pl.pvpXP)
         pl.setVictim(None)
         Main.activityManager ! Enqueue(50, ResetChar, pla)
       } else if (pl.victim.isEmpty) {
-        pl.setVictim(Some(pla))
+        pl.setVictim(Some(sender))
         Main.activityManager ! Enqueue(pl.speed, AttackNow(pla), pla)
       }
     } else {
+      pl.setVictim(None)
       pla ! PrintMessage("You are having a hard time finding them.")
     }
   }
@@ -130,18 +159,17 @@ object Character {
     pl.setVictim(None)
     Main.roomManager ! RoomManager.EnterRoom("FirstRoom", pla)
   }
-  val armorReduc = 0.1
-  //Exit CCs
 
-  //view CCs
+  //kill case classes
+  case class SendExp(xp: Int)
+  case class AddExp(xp: Int)
+  case object ResetVictim
+
+  //view case classes
   case class View(name: ActorRef)
   case object Stats
-  //cooldown
-  case class Cooldown(cd: Int)
-  //kill CCs
-  case class SendExp(xp: Int)
-  case object ResetVictim
-  //heal CCs
+
+  //heal case classes
   case class HealCmnd(player: ActorRef)
   case class SendHeal(c: ActorRef)
   case class ReceiveHeal(hl: Int)
@@ -150,7 +178,8 @@ object Character {
     pl.output.println("Healed for " + hl + "!")
     sender ! PrintMessage("Healed " + pl.makeFstCap(pl.name) + " for " + hl + "!")
   }
-  //stun/feeze CCs
+
+  //stun case classes
   case class StunCmnd(victim: ActorRef)
   case class SendStun(ar: ActorRef)
   case class Stun(victim: ActorRef)
@@ -165,16 +194,55 @@ object Character {
     pl.output.println("You're no longer stunned!")
     pl.kill(c.path.name, pla)
   }
-  //poison CCs
-  case class PoisonCmnd(victim: ActorRef)
-  case class SendPoison(ar: ActorRef, dmg: Int)
-  case class Poisoned(dmg: Int)
-  case object Unpoison
 
-  case class PrintMessage(msg: String)
+  //DOT case classes
+  case class DOTCmnd(victim: ActorRef, dotType: String)
+  def dotCmnd(vic: ActorRef, pl: Player, pla: ActorRef, speed: Int, dotType: String) = {
+    if (vic == pla) {
+      pl.output.println("You cannot " + dotType + " yourself.")
+    } else if (pl.party.contains(vic)) {
+      pl.output.println("You cannot " + dotType + " a party member.")
+    } else {
+      pl.output.println("You are " + dotType + "ing " + pl.makeFstCap(vic.path.name))
+      Main.activityManager ! Enqueue(speed, DOTNow(vic, dotType), pla)
+      if (!pl.sneaking) pl.kill(vic.path.name, pla)
+    }
+  }
 
-  case class AddExp(xp: Int)
+  case class DOTNow(ar: ActorRef, dotType: String)
+  def dotNow(vic: ActorRef, pl: Player, pla: ActorRef, dmg: Int, dotType: String) = {
+    if (pl.isAlive && !pl.stunned) vic ! SendDOT(dmg, dotType, pla)
+  }
 
+  case class SendDOT(dmg: Int, dotType: String, sender: ActorRef)
+  def sendDOT(dmg: Int, pl: Player, pla: ActorRef, dotType: String, sender: ActorRef) = {
+    pl.rmvHlth(dmg, pla)
+    sender ! DOTTaken(dmg, pl.isAlive, pl.health.toInt, dotType, pla)
+    sender ! CheckDOT
+    pl.output.println(pl.makeFstCap(pla.path.name) + " dealt " + dmg + " " + dotType + " " + "damage! Health is at "
+      + (if (pl.health <= 0) 0 else pl.health))
+    if (!pl.isAlive) {
+      pl.clearInventory
+      pl.location ! Room.HasDied(pla, pl.name)
+      pla ! ResetVictim
+      pla ! SendExp(pl.pvpXP)
+      pla ! ResetDOT(dotType)
+      pl.setVictim(None)
+      Main.activityManager ! Enqueue(50, ResetChar, pla)
+    }
+  }
+
+  case class DOTTaken(dmg: Int, alive: Boolean, health: Int, dotType: String, vic: ActorRef)
+  def dotTaken(dmg: Int, alive: Boolean, health: Int, dotType: String, pl: Player, vic: ActorRef) = {
+    if (alive) {
+      pl.output.println("You dealt " + dmg + " " + dotType + " " + "damage to " + pl.makeFstCap(vic.path.name) + "!")
+    } else pl.output.println("You killed " + pl.makeFstCap(vic.path.name) + "!")
+  }
+
+  case object CheckDOT
+  case class ResetDOT(dotType: String)
+
+  // Party case classes
   case class Invite(pla: ActorRef)
 
   def invite(pla: ActorRef, pl: Player) = {
@@ -223,6 +291,6 @@ object Character {
 
   }
 
-  case object Unsneak
-
+  //Miscellaneous case classes and values
+  case class PrintMessage(msg: String)
 }

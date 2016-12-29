@@ -35,12 +35,12 @@ class Room(
     //Player Management
     case EnterRoom(pl, name, stlth) =>
       if (!stlth) {
-        chars.foreach(p => p._1 ! PrintMessage(name + " entered the room."))
+        chars.foreach(p => p._1 ! PrintMessage(makeFstCap(name) + " entered the room."))
       }
       addPlayer(pl, stlth)
     case LeaveRoom(pl, name, stlth) =>
       if (!stlth) {
-        chars.foreach(p => p._1 ! PrintMessage(name + " left the room."))
+        chars.foreach(p => p._1 ! PrintMessage(makeFstCap(name) + " left the room."))
       }
       removePlayer(pl)
     case LeaveGame(pl, name) =>
@@ -60,7 +60,7 @@ class Room(
     case SayMessage(msg, name) =>
       chars.foreach(p => p._1 ! PrintMessage(s"${RESET}${MAGENTA}$name: $msg${RESET}"))
     case CheckInRoom(cmd, pl, ar) =>
-      val ch = chars.filter(c => c._1.path.name == pl).map(x => x._1)
+      val ch = chars.filter(c => c._1.path.name == pl.toUpperCase()).map(x => x._1)
       if (ch.length == 0) {
         ar ! PrintMessage("Invalid Target")
       } else cmd match {
@@ -73,7 +73,9 @@ class Room(
         case "stun" =>
           ar ! StunCmnd(ch(0))
         case "poison" =>
-          ar ! PoisonCmnd(ch(0))
+          ar ! DOTCmnd(ch(0), cmd)
+        case "burn" =>
+          ar ! DOTCmnd(ch(0), cmd)
         case _ =>
           ar ! PrintMessage("Unknown command")
           println("Unknown command sent.")
