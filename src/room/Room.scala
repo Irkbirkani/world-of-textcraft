@@ -76,6 +76,10 @@ class Room(
           ar ! DOTCmnd(ch(0), cmd)
         case "burn" =>
           ar ! DOTCmnd(ch(0), cmd)
+        case "cut" =>
+          ar ! DOTCmnd(ch(0), cmd)
+        case "mend" =>
+          ar ! DOTCmnd(ch(0), cmd)
         case _ =>
           ar ! PrintMessage("Unknown command")
           println("Unknown command sent.")

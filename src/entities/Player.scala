@@ -181,7 +181,7 @@ abstract class Player(
   }
 
   //Class Management
-  def classCommands(in: String, pl: Player, pla: ActorRef): Unit
+  def classCommands(in: String): Unit
 
   val abilityPower: Int
   val abilitySpeed: Int
@@ -212,6 +212,7 @@ abstract class Player(
   def rmvHlth(dmg: Int, self: ActorRef) = {
     val newHlth = health - dmg
     if (newHlth <= 0) {
+      _health = 0
       Main.activityManager ! ActivityManager.Enqueue(50, ResetChar, self)
     } else _health -= dmg
   }
@@ -476,7 +477,7 @@ abstract class Player(
           output.println(s"${RESET}${GREEN}$h${RESET}")
         } else output.println(i)
       }
-    } else classCommands(in, this, self)
+    } else classCommands(in)
   }
 }
 

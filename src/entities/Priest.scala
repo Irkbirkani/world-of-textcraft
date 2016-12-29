@@ -51,7 +51,19 @@ class Priest(
     case RemoveMember(pl) => removeMember(pl, this)
     case Stun(c) => charStun(c, this, self)
     case Unstun(c) => unstun(c, this, self)
+    case DOTCmnd(victim, dotType) =>
+      dotCmnd(victim, this, self, 20, dotType)
+      mending = Some(victim)
+    case DOTNow(victim, dotType) => dotNow(victim, this, self, (level * abilityPower), dotType)
     case SendDOT(dmg, dotType, send) => sendDOT(dmg, this, self, dotType, send)
+    case DOTTaken(dmg, alive, health, dotType, vic) => dotTaken(dmg, alive, health, dotType, this, vic)
+    case CheckDOT =>
+      mending match {
+        case Some(target) =>
+          if (mendCD) Main.activityManager ! ActivityManager.Enqueue(20, DOTNow(target, "mend"), self)
+        case None =>
+      }
+    case ResetDOT(dotType) => mending = None
     case HealCmnd(pl) =>
       if (healCD) {
         output.println("Heal on Cooldown")
@@ -62,7 +74,6 @@ class Priest(
         Main.activityManager ! ActivityManager.Enqueue(50, HealCD, self)
       }
     case SendHeal(c) =>
-      val healAmnt = level * abilityPower
       c ! ReceiveHeal(healAmnt)
     case ReceiveHeal(hl) =>
       receiveHeal(hl, this, sender)
@@ -70,22 +81,8 @@ class Priest(
       healCD = false
   }
 
-  def classCommands(in: String, pl: Player, pla: ActorRef) = {
-    if (in.startsWith("heal")) heal(pl, in.drop(5), pla)
-    else pla ! PrintMessage("What?")
-
-  }
-
-  var healCD = false
-  def heal(pl: Player, nm: String, pla: ActorRef) = {
-    if (pl.level < 3) {
-      pla ! PrintMessage("Level too low to use heal!")
-    } else pl.location ! Room.CheckInRoom("heal", nm, pla)
-  }
-
   val abilitySpeed = 20
   val abilityPower = 3
-  val abilities = Map("Heal: heal a target" -> 3)
 
   val className = "Priest"
 
@@ -95,6 +92,30 @@ class Priest(
 
   val dmgReduc = 10
   val startHealth = 110
+
+  def classCommands(in: String) = {
+    if (in.startsWith("heal")) heal(in.drop(5))
+    else if (in.startsWith("mend")) mend(in.drop(5))
+    else output.println("What?")
+
+  }
+
+  var healCD = false
+  val healAmnt = level * abilityPower * abilityPower
+  def heal(nm: String) = {
+    if (level < 3) output.println("Level too low to use Heal!")
+    else location ! Room.CheckInRoom("heal", nm, self)
+  }
+
+  var mending: Option[ActorRef] = None
+  var mendCD = false
+  def mend(nm: String) = {
+    if (level < 5) output.println("Level too low to use Mend!")
+    else location ! Room.CheckInRoom("mend", nm, self)
+  }
+
+  val abilities = Map("Heal: heal a target for " + healAmnt -> 3,
+      "Mend: mend your targets wounds for " + (level * abilityPower) + " every 2 seconds for 10 seconds." -> 5)
 
 }
 

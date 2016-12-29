@@ -203,7 +203,12 @@ object Character {
     } else if (pl.party.contains(vic)) {
       pl.output.println("You cannot " + dotType + " a party member.")
     } else {
-      pl.output.println("You are " + dotType + "ing " + pl.makeFstCap(vic.path.name))
+      dotType match {
+        case "cut" =>
+          pl.output.println("You are " + dotType + "ting " + pl.makeFstCap(vic.path.name))
+        case _ =>
+          pl.output.println("You are " + dotType + "ing " + pl.makeFstCap(vic.path.name))
+      }
       Main.activityManager ! Enqueue(speed, DOTNow(vic, dotType), pla)
       if (!pl.sneaking) pl.kill(vic.path.name, pla)
     }
@@ -216,29 +221,59 @@ object Character {
 
   case class SendDOT(dmg: Int, dotType: String, sender: ActorRef)
   def sendDOT(dmg: Int, pl: Player, pla: ActorRef, dotType: String, sender: ActorRef) = {
-    pl.rmvHlth(dmg, pla)
-    sender ! DOTTaken(dmg, pl.isAlive, pl.health.toInt, dotType, pla)
-    sender ! CheckDOT
-    pl.output.println(pl.makeFstCap(pla.path.name) + " dealt " + dmg + " " + dotType + " " + "damage! Health is at "
-      + (if (pl.health <= 0) 0 else pl.health))
+    dotType match {
+      case "poison" =>
+        pl.rmvHlth(dmg, pla)
+        sender ! DOTTaken(dmg, pl.isAlive, pl.health.toInt, dotType, pla)
+        sender ! CheckDOT
+        pl.output.println(pl.makeFstCap(pla.path.name) + " dealt " + dmg + " " + dotType + " " + "damage! Health is at " + pl.health)
+      case "burn" =>
+        pl.rmvHlth(dmg, pla)
+        sender ! DOTTaken(dmg, pl.isAlive, pl.health.toInt, dotType, pla)
+        sender ! CheckDOT
+        pl.output.println(pl.makeFstCap(pla.path.name) + " dealt " + dmg + " fire damage! Health is at " + pl.health)
+      case "cut" =>
+        pl.rmvHlth(dmg, pla)
+        sender ! DOTTaken(dmg, pl.isAlive, pl.health.toInt, dotType, pla)
+        sender ! CheckDOT
+        pl.output.println(pl.makeFstCap(pla.path.name) + " dealt " + dmg + " damage! Health is at " + pl.health)
+      case "mend" =>
+        pl.addHlth(dmg)
+        sender ! DOTTaken(dmg, pl.isAlive, pl.health.toInt, dotType, pla)
+        sender ! CheckDOT
+        pl.output.println(pl.makeFstCap(pla.path.name) + " healed you for" + dmg + "! Health is at " + pl.health)
+    }
     if (!pl.isAlive) {
       pl.clearInventory
       pl.location ! Room.HasDied(pla, pl.name)
       pla ! ResetVictim
       pla ! SendExp(pl.pvpXP)
       pla ! ResetDOT(dotType)
-      pl.setVictim(None)
       Main.activityManager ! Enqueue(50, ResetChar, pla)
     }
   }
 
   case class DOTTaken(dmg: Int, alive: Boolean, health: Int, dotType: String, vic: ActorRef)
   def dotTaken(dmg: Int, alive: Boolean, health: Int, dotType: String, pl: Player, vic: ActorRef) = {
-    if (alive) {
-      pl.output.println("You dealt " + dmg + " " + dotType + " " + "damage to " + pl.makeFstCap(vic.path.name) + "!")
-    } else pl.output.println("You killed " + pl.makeFstCap(vic.path.name) + "!")
+    dotType match {
+      case "poison" =>
+        if (alive) {
+          pl.output.println("You dealt " + dmg + " " + dotType + " " + "damage to " + pl.makeFstCap(vic.path.name) + "!")
+        } else pl.output.println("You killed " + pl.makeFstCap(vic.path.name) + "!")
+      case "burn" =>
+        if (alive) {
+          pl.output.println("You dealt " + dmg + " fire damage to " + pl.makeFstCap(vic.path.name) + "!")
+        } else pl.output.println("You killed " + pl.makeFstCap(vic.path.name) + "!")
+      case "mend" =>
+        if (alive) {
+          pl.output.println("You healed " + pl.makeFstCap(vic.path.name) + " for " + dmg + "!")
+        } else pl.output.println(pl.makeFstCap(vic.path.name) + " has died!")
+      case "cut" =>
+        if (alive) {
+          pl.output.println("You dealt " + dmg + " damage to " + pl.makeFstCap(vic.path.name) + "!")
+        } else pl.output.println("You killed " + pl.makeFstCap(vic.path.name) + "!")
+    }
   }
-
   case object CheckDOT
   case class ResetDOT(dotType: String)
 

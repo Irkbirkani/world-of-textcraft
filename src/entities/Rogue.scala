@@ -89,16 +89,16 @@ class Rogue(
 
   }
 
-  def classCommands(in: String, pl: Player, pla: ActorRef) = {
-    if (in.startsWith("poison")) poison(in.drop(7), pl, pla)
-    else if (in.startsWith("sneak")) pla ! Sneak
-    else pla ! PrintMessage("What?")
+  def classCommands(in: String) = {
+    if (in.startsWith("poison")) poison(in.drop(7))
+    else if (in.startsWith("sneak")) self ! Sneak
+    else output.println("What?")
   }
 
-  def poison(vc: String, pl: Player, pla: ActorRef) = {
-    if (pl.level < 1) pla ! PrintMessage("Level too low to use Poison!")
+  def poison(vc: String) = {
+    if (level < 1) output.println("Level too low to use Poison!")
     else {
-      pl.location ! Room.CheckInRoom("poison", vc, pla)
+      location ! Room.CheckInRoom("poison", vc, self)
       poisonCD = true
       Main.activityManager ! Enqueue(100, PoisonCD, self)
     }

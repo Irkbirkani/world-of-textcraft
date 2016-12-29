@@ -51,7 +51,19 @@ class Warrior(
     case ChangeLoc(pl, newL) => newLocation(pl, newL, this)
     case RemoveMember(pl) => removeMember(pl, this)
     case ReceiveHeal(hl) => receiveHeal(hl, this, sender)
+    case DOTCmnd(victim, dotType) =>
+      dotCmnd(victim, this, self, 20, dotType)
+      cutting = Some(victim)
+    case DOTNow(victim, dotType) => dotNow(victim, this, self, (level * abilityPower), dotType)
     case SendDOT(dmg, dotType, send) => sendDOT(dmg, this, self, dotType, send)
+    case DOTTaken(dmg, alive, health, dotType, vic) => dotTaken(dmg, alive, health, dotType, this, vic)
+    case CheckDOT =>
+      cutting match {
+        case Some(target) =>
+          if (cutCD) Main.activityManager ! ActivityManager.Enqueue(20, DOTNow(target, "cut"), self)
+        case None =>
+      }
+    case ResetDOT(dotType) => cutting = None
     case StunCmnd(c) =>
       setVictim(Some(c))
       if (victim.get == self) {
@@ -66,27 +78,29 @@ class Warrior(
         Main.activityManager ! ActivityManager.Enqueue(80, StunCD, self)
         kill(victim.get.path.name, self)
       }
-    case SendStun(c) =>
-      c ! Stun(self)
-    case Stun(c) =>
-      charStun(c, this, self)
-    case Unstun(c) =>
-      unstun(c, this, self)
-    case StunCD =>
-      stunCD = false
+    case SendStun(c) => c ! Stun(self)
+    case Stun(c) => charStun(c, this, self)
+    case Unstun(c) => unstun(c, this, self)
+    case StunCD => stunCD = false
   }
 
-  def classCommands(in: String, pl: Player, pla: ActorRef) = {
+  def classCommands(in: String) = {
     if (in.startsWith("stun")) {
-      stun(pl, in.drop(5), pla)
-    } else pla ! PrintMessage("What?")
+      stun(in.drop(5))
+    } else output.println("What?")
   }
 
   var stunCD = false
+  def stun(nm: String) = {
+    if (level < 3) output.println("Level too low to use stun!")
+    else location ! Room.CheckInRoom("stun", nm, self)
+  }
 
-  def stun(pl: Player, nm: String, pla: ActorRef) = {
-    if (pl.level < 3) pla ! PrintMessage("Level too low to use stun!")
-    else pl.location ! Room.CheckInRoom("stun", nm.toUpperCase(), pla)
+  var cutting: Option[ActorRef] = None
+  var cutCD = false
+  def cut(nm: String) = {
+    if (level < 5) output.println("Level too low to use Cut!")
+    else location ! Room.CheckInRoom("cut", nm, self)
   }
 
   val abilityPower = 3

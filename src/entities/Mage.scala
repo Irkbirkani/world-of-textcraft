@@ -79,22 +79,22 @@ class Mage(
     case BurnCD => burnCD = false
   }
 
-  def classCommands(in: String, pl: Player, pla: ActorRef) = {
-    if (in.startsWith("teleport")) teleport(in.drop(9), pl, pla)
-    else if (in.startsWith("burn")) burn(in.drop(5), pl, pla)
-    else pla ! PrintMessage("What?")
+  def classCommands(in: String) = {
+    if (in.startsWith("teleport")) teleport(in.drop(9))
+    else if (in.startsWith("burn")) burn(in.drop(5))
+    else output.println("What?")
 
   }
 
-  def teleport(dest: String, pl: Player, pla: ActorRef) = {
-    if (pl.level <= 10) pla ! PrintMessage("Level not high enough to teleport!")
-    else Main.roomManager ! RoomManager.CheckExists(dest, pla)
+  def teleport(dest: String) = {
+    if (level <= 10) output.println("Level not high enough to teleport!")
+    else Main.roomManager ! RoomManager.CheckExists(dest, self)
   }
 
-  def burn(vic: String, pl: Player, pla: ActorRef) = {
-    if (pl.level <= 3) pla ! PrintMessage("Level not high enough to use burn!")
+  def burn(vic: String) = {
+    if (level <= 3) output.println("Level not high enough to use burn!")
     else {
-      pl.location ! Room.CheckInRoom("burn", vic, pla)
+      location ! Room.CheckInRoom("burn", vic, self)
       burnCD = true
       Main.activityManager ! ActivityManager.Enqueue(100, BurnCD, self)
     }
