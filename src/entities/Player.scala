@@ -196,6 +196,8 @@ abstract class Player(
     abilities.foreach(a => output.println(a._1 + ": available at level " + a._2))
   }
 
+  var transDest:String
+  
   //Health Management
   val startHealth: Int
   def health = _health
@@ -389,7 +391,7 @@ abstract class Player(
   }
 
   //Process Player Input
-  private var _mode = 0 //mode 0 -> process input, mode 1 -> party invite
+  private var _mode = 0 //mode 0 -> process input, mode 1 -> party invite, mode 2 -> mage transport
   def mode = _mode
 
   def changeMode(mode: Int) = {
@@ -463,7 +465,7 @@ abstract class Player(
     } else if (in.startsWith("/w")) tellMessage(in)
     else if (in.startsWith("\t")) tabMessage(in, self)
     //party commands
-    else if (in.startsWith("invite")) Main.playerManager ! PlayerManager.CheckPlayerExist(in.drop(7), party, self)
+    else if (in.startsWith("invite")) Main.playerManager ! PlayerManager.CheckPlayerExist(in.drop(7), self)
     else if ("party".startsWith(in)) printParty
     else if (in.startsWith("leave")) leaveParty(self)
     else if (in.startsWith("/p")) partyChat(in.drop(3), self)

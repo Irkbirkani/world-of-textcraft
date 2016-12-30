@@ -27,7 +27,8 @@ class Warrior(
   import Warrior._
 
   def receive = {
-    case ProcessInput => processInput(this, self, newMem)
+    case SetMode(mode) => changeMode(mode)
+    case ProcessInput => processInput(this, self)
     case CheckPass(pass, in, out, sock) => checkPass(pass, this, self, in, out, sock)
     case EnterGame(loc) => enterGame(loc, this, self)
     case PrintMessage(msg) => output.println(msg)
@@ -51,6 +52,7 @@ class Warrior(
     case ChangeLoc(pl, newL) => newLocation(pl, newL, this)
     case RemoveMember(pl) => removeMember(pl, this)
     case ReceiveHeal(hl) => receiveHeal(hl, this, sender)
+    case SetTransDest(dest) => transDest = dest
     case DOTCmnd(victim, dotType) =>
       dotCmnd(victim, this, self, 20, dotType)
       cutting = Some(victim)
@@ -82,6 +84,7 @@ class Warrior(
     case Stun(c) => charStun(c, this, self)
     case Unstun(c) => unstun(c, this, self)
     case StunCD => stunCD = false
+    case CutCD => cutCD = false
   }
 
   def classCommands(in: String) = {
@@ -93,7 +96,11 @@ class Warrior(
   var stunCD = false
   def stun(nm: String) = {
     if (level < 3) output.println("Level too low to use stun!")
-    else location ! Room.CheckInRoom("stun", nm, self)
+    else {
+      location ! Room.CheckInRoom("stun", nm, self)
+      cutCD = true
+      Main.activityManager ! ActivityManager.Enqueue(150, StunCD, self)
+    }
   }
 
   var cutting: Option[ActorRef] = None
@@ -105,7 +112,8 @@ class Warrior(
 
   val abilityPower = 3
   val abilitySpeed = 20
-  val abilities = Map("Stun: stun your target for 3 seconds." -> 3)
+  val abilities = Map("Stun: stun your target for 3 seconds. Cooldown: 8 Seconds." -> 3,
+    "Cut: cut your target causing them to bleed dealing " + (level * abilityPower) + " damage every 2 seconds for 10 seconds. Cooldown: 15 Seconds" -> 5)
 
   val className = "Warrior"
 
@@ -116,10 +124,12 @@ class Warrior(
   val dmgReduc = 25
   val startHealth = 125
 
+  var transDest = ""
 }
 
 object Warrior {
   val startHealth = 125
 
   case object StunCD
+  case object CutCD
 }

@@ -47,7 +47,7 @@ class PlayerManager extends Actor {
         case Some(pl) => pl ! PrintMessage(s"${RESET}${BOLD}${BLUE}$from: $msg${RESET}")
         case None => sender ! PrintMessage(s"Player $to does not exist.")
       }
-    case CheckPlayerExist(pl, pt, pla) =>
+    case CheckPlayerExist(pl, pla) =>
       context.child(pl.toUpperCase) match {
         case Some(p) =>
           if (p != pla) p ! Invite(pla)
@@ -79,5 +79,5 @@ object PlayerManager {
   //Messaging Management
   case class PrintShoutMessage(msg: String, name: String)
   case class PrintTellMessage(to: String, from: String, msg: String)
-  case class CheckPlayerExist(pl: String, party: scala.collection.mutable.Map[ActorRef, ActorRef], pla: ActorRef)
+  case class CheckPlayerExist(pl: String, pla: ActorRef)
 }

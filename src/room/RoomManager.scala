@@ -18,11 +18,14 @@ class RoomManager extends Actor {
     case ShortPath(curr, dest) =>
       val path = shortestPath(curr, dest, roomExits, List())
       path.foreach(a => if (a.nonEmpty) sender ! PrintMessage(a))
-    case CheckExists(rm, ar) =>
+    case CheckExists(rm, ar, cmd) =>
       if (!rooms.contains(rm.toUpperCase)) {
-        rooms.foreach(println)
         ar ! PrintMessage(rm + " is not a room!")
-      } else ar ! StartTeleport(rm.filter(x => !x.isWhitespace))
+      } else cmd match {
+        case "tele" => ar ! StartTeleport(rm.filter(x => !x.isWhitespace))
+        case "trans" => ar ! CheckPlayers(rm.filter(x => !x.isWhitespace))
+        case _ =>
+      }
   }
   private def comp(s1: String, s2: String): Int = {
     if (s1 == s2) 0
@@ -57,7 +60,7 @@ class RoomManager extends Actor {
 object RoomManager {
   //Puts char in a room
   case class EnterRoom(loc: String, p: ActorRef)
-  case class CheckExists(rm: String, ar: ActorRef)
+  case class CheckExists(rm: String, ar: ActorRef, cmd: String)
   case class LinkingRooms(key: String, exits: List[String])
   case class ShortPath(curr: String, dest: String)
 

@@ -28,8 +28,11 @@ object Character {
     }
   }
 
+  //Inpuut case classes
+  case class SetMode(mode: Int)
+  
   case object ProcessInput
-  def processInput(pl: Player, self: ActorRef, inv: ActorRef) = {
+  def processInput(pl: Player, self: ActorRef) = {
     if (pl.input.ready() && !pl.stunned) {
       var in = pl.input.readLine()
       if (in.startsWith("\t")) in = "\t" + in.trim else in = in.trim
@@ -46,6 +49,15 @@ object Character {
           } else {
             pl.newMem ! InviteAccepted(false, self)
             pl.setNewMem(null)
+            pl.changeMode(0)
+          }
+        case 2 =>
+          if ("yes".startsWith(in)) {
+            Main.roomManager ! RoomManager.EnterRoom(pl.transDest, self)
+            pl.transDest = ""
+            pl.changeMode(0)
+          } else {
+            pl.transDest = ""
             pl.changeMode(0)
           }
       }
@@ -160,7 +172,7 @@ object Character {
     Main.roomManager ! RoomManager.EnterRoom("FirstRoom", pla)
   }
 
-  //kill case classes
+  //Death case classes
   case class SendExp(xp: Int)
   case class AddExp(xp: Int)
   case object ResetVictim
@@ -194,6 +206,9 @@ object Character {
     pl.output.println("You're no longer stunned!")
     pl.kill(c.path.name, pla)
   }
+
+  //Transport case classes
+  case class SetTransDest(dest:String)
 
   //DOT case classes
   case class DOTCmnd(victim: ActorRef, dotType: String)

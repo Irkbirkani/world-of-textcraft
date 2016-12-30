@@ -26,7 +26,8 @@ class Priest(
   import Priest._
 
   def receive = {
-    case ProcessInput => processInput(this, self, newMem)
+    case SetMode(mode) => changeMode(mode)
+    case ProcessInput => processInput(this, self)
     case CheckPass(pass, in, out, sock) => checkPass(pass, this, self, in, out, sock)
     case EnterGame(loc) => enterGame(loc, this, self)
     case PrintMessage(msg) => output.println(msg)
@@ -51,6 +52,7 @@ class Priest(
     case RemoveMember(pl) => removeMember(pl, this)
     case Stun(c) => charStun(c, this, self)
     case Unstun(c) => unstun(c, this, self)
+    case SetTransDest(dest) => transDest = dest
     case DOTCmnd(victim, dotType) =>
       dotCmnd(victim, this, self, 20, dotType)
       mending = Some(victim)
@@ -73,12 +75,10 @@ class Priest(
         Main.activityManager ! ActivityManager.Enqueue(abilitySpeed, SendHeal(pl), self)
         Main.activityManager ! ActivityManager.Enqueue(50, HealCD, self)
       }
-    case SendHeal(c) =>
-      c ! ReceiveHeal(healAmnt)
-    case ReceiveHeal(hl) =>
-      receiveHeal(hl, this, sender)
-    case HealCD =>
-      healCD = false
+    case SendHeal(c) => c ! ReceiveHeal(healAmnt)
+    case ReceiveHeal(hl) => receiveHeal(hl, this, sender)
+    case HealCD => healCD = false
+    case MendCD => mendCD = false
   }
 
   val abilitySpeed = 20
@@ -92,6 +92,8 @@ class Priest(
 
   val dmgReduc = 10
   val startHealth = 110
+
+  var transDest = ""
 
   def classCommands(in: String) = {
     if (in.startsWith("heal")) heal(in.drop(5))
@@ -111,11 +113,15 @@ class Priest(
   var mendCD = false
   def mend(nm: String) = {
     if (level < 5) output.println("Level too low to use Mend!")
-    else location ! Room.CheckInRoom("mend", nm, self)
+    else {
+      location ! Room.CheckInRoom("mend", nm, self)
+      mendCD = true
+      Main.activityManager ! ActivityManager.Enqueue(150, MendCD, self)
+    }
   }
 
-  val abilities = Map("Heal: heal a target for " + healAmnt -> 3,
-      "Mend: mend your targets wounds for " + (level * abilityPower) + " every 2 seconds for 10 seconds." -> 5)
+  val abilities = Map("Heal: heal a target for " + healAmnt + ". Cooldown: 5 Seconds." -> 3,
+    "Mend: mend your targets wounds for " + (level * abilityPower) + " every 2 seconds for 10 seconds. Cooldown: 15 Seconds" -> 5)
 
 }
 
@@ -124,5 +130,6 @@ object Priest {
   val startHealth = 110
 
   case object HealCD
+  case object MendCD
 
 }

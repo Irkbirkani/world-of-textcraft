@@ -26,7 +26,8 @@ class Mage(
   import Mage._
 
   def receive = {
-    case ProcessInput => processInput(this, self, newMem)
+    case SetMode(mode) => changeMode(mode)
+    case ProcessInput => processInput(this, self)
     case CheckPass(pass, in, out, sock) => checkPass(pass, this, self, in, out, sock)
     case EnterGame(loc) => enterGame(loc, this, self)
     case PrintMessage(msg) => output.println(msg)
@@ -65,6 +66,26 @@ class Mage(
         case None =>
       }
     case ResetDOT(dotType) => burning = None
+    case StartTransport(dest, self) => Main.roomManager ! RoomManager.CheckExists(dest, self, "trans")
+    case CheckPlayers(dest) =>
+      transDest = dest
+      transporting match {
+        case "party" => party.filter(m=> m._1 != self && m._2 == location).foreach { m =>
+          m._1 ! PrintMessage(makeFstCap(name) + " wants to transport you to " + dest + ". y/_")
+          m._1 ! SetMode(2)
+          m._1 ! SetTransDest(dest)
+        }
+        case nme => 
+           val trns = party.filter(m => m._1.path.name == nme.toUpperCase() && m._2 == location).toList
+           if (trns.length == 0) output.println(makeFstCap(nme) + " is not in your party or in a different room.")
+           else if (nme == name) output.println("You cannot transport your self. Use Teleport.")
+           else {
+             trns(0)._1 ! PrintMessage(makeFstCap(name) + " wants to transport you to " + dest + ". y/_")
+             trns(0)._1 ! SetMode(2)
+             trns(0)._1 ! SetTransDest(dest)
+           }
+      }
+    case SetTransDest(dest) => transDest = dest
     case StartTeleport(rm) =>
       if (teleCD) {
         output.println("Teleport on cooldown!")
@@ -72,42 +93,63 @@ class Mage(
         output.println("Teleporting to " + rm + "!")
         teleCD = true
         Main.activityManager ! ActivityManager.Enqueue(100, Teleport(rm), self)
-        Main.activityManager ! ActivityManager.Enqueue(600, TeleCD, self)
+        Main.activityManager ! ActivityManager.Enqueue(1800, TeleCD, self)
       }
     case Teleport(rm) => Main.roomManager ! RoomManager.EnterRoom(rm, self)
-    case TeleCD => teleCD = false
-    case BurnCD => burnCD = false
+    case TeleCD =>
+      output.println("Teleport off cooldown.")
+      teleCD = false
+    case BurnCD =>
+      output.println("Burn off cooldown.")
+      burnCD = false
+    case TransCD => 
+      output.println("Transport off cooldown.")
+      transCD = false
   }
 
   def classCommands(in: String) = {
     if (in.startsWith("teleport")) teleport(in.drop(9))
     else if (in.startsWith("burn")) burn(in.drop(5))
+    else if (in.startsWith("transport")) transport(in)
     else output.println("What?")
 
   }
 
-  def teleport(dest: String) = {
-    if (level <= 10) output.println("Level not high enough to teleport!")
-    else Main.roomManager ! RoomManager.CheckExists(dest, self)
-  }
+  var teleCD = false
 
-  def burn(vic: String) = {
-    if (level <= 3) output.println("Level not high enough to use burn!")
-    else {
-      location ! Room.CheckInRoom("burn", vic, self)
-      burnCD = true
-      Main.activityManager ! ActivityManager.Enqueue(100, BurnCD, self)
-    }
+  def teleport(dest: String) = {
+    if (level < 10) output.println("Level not high enough to teleport!")
+    else Main.roomManager ! RoomManager.CheckExists(dest, self, "tele")
   }
 
   var burnCD = false
   var burning: Option[ActorRef] = None
+  def burn(vic: String) = {
+    if (level < 3) output.println("Level not high enough to use burn!")
+    else {
+      location ! Room.CheckInRoom("burn", vic, self)
+      burnCD = true
+      Main.activityManager ! ActivityManager.Enqueue(150, BurnCD, self)
+    }
+  }
 
-  var teleCD = false
+  var transCD = false
+  private var transporting = ""
+  var transDest = ""
+  def transport(in: String) = {
+    if (level < 1) output.println("Level not high enough to use transport")
+    else {
+      val Array(_, ppl, dest) = in.split(" +", 3)
+      transporting = ppl
+      Main.activityManager ! ActivityManager.Enqueue(100, StartTransport(dest,self), self)
+      Main.activityManager ! ActivityManager.Enqueue(1800, TransCD, self)
+    }
+  }
 
   val abilityPower = 3
   val abilitySpeed = 15
-  val abilities = Map("Burn: burn someone for " + (level * abilityPower) + " every 2 seconds for 10 seconds" -> 3, "Teleport: teleport to a specific room" -> 10)
+  val abilities = Map("Burn: burn someone for " + (level * abilityPower) + " every 2 seconds for 10 seconds. Cooldown: 15 Seconds." -> 3,
+    "Teleport: teleport to a specific room. Cooldown: 3 Minutes." -> 10)
 
   val className = "Mage"
 
@@ -128,4 +170,8 @@ object Mage {
   case class StartTeleport(rm: String)
   case class Teleport(rm: String)
   case object TeleCD
+
+  case class StartTransport(dest:String, self:ActorRef)
+  case class CheckPlayers(dest: String)
+  case object TransCD
 }

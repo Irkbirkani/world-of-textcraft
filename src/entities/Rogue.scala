@@ -27,7 +27,8 @@ class Rogue(
   import Rogue._
 
   def receive = {
-    case ProcessInput => processInput(this, self, newMem)
+    case SetMode(mode) => changeMode(mode)
+    case ProcessInput => processInput(this, self)
     case CheckPass(pass, in, out, sock) => checkPass(pass, this, self, in, out, sock)
     case EnterGame(loc) => enterGame(loc, this, self)
     case PrintMessage(msg) => output.println(msg)
@@ -53,6 +54,7 @@ class Rogue(
     case ReceiveHeal(hl) => receiveHeal(hl, this, sender)
     case Stun(c) => charStun(c, this, self)
     case Unstun(c) => unstun(c, this, self)
+    case SetTransDest(dest) => transDest = dest
     case DOTCmnd(victim, dotType) =>
       dotCmnd(victim, this, self, 20, dotType)
       poisoning = Some(victim)
@@ -96,11 +98,11 @@ class Rogue(
   }
 
   def poison(vc: String) = {
-    if (level < 1) output.println("Level too low to use Poison!")
+    if (level < 3) output.println("Level too low to use Poison!")
     else {
       location ! Room.CheckInRoom("poison", vc, self)
       poisonCD = true
-      Main.activityManager ! Enqueue(100, PoisonCD, self)
+      Main.activityManager ! Enqueue(150, PoisonCD, self)
     }
   }
 
@@ -111,7 +113,8 @@ class Rogue(
 
   val abilityPower = 2
   val abilitySpeed = 15
-  val abilities = Map("Sneak: become invisible for 1 minute" -> 1, "Poison: poison someone for " + (level * abilityPower) + " every 2 seconds for 10 seconds" -> 3)
+  val abilities = Map("Sneak: become invisible for 1 minute. Cooldown: 1 Minute" -> 1,
+    "Poison: poison someone for " + (level * abilityPower) + " every 2 seconds for 10 seconds. Cooldown: 15 Seconds" -> 3)
 
   val className = "Rogue"
 
@@ -121,6 +124,8 @@ class Rogue(
 
   val dmgReduc = 20
   val startHealth = 115
+
+  var transDest = ""
 
 }
 
