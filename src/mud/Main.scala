@@ -86,14 +86,14 @@ object Main extends App {
         out.print("-> ")
         name = (in.readLine().trim).filter(x => x.isLetter)
       }
-//      out.println("Password:\r\nPasswords must be at least six characters, have one uppercase letter, and one number..\r")
-//      out.print("-> ")
-//      var pass = in.readLine().trim
-//      while (!passCheck(pass)) {
-//        out.println("Invalid password. Try again.")
-//        out.print("-> ")
-//        pass = (in.readLine().trim)
-//      }
+      //      out.println("Password:\r\nPasswords must be at least six characters, have one uppercase letter, and one number..\r")
+      //      out.print("-> ")
+      //      var pass = in.readLine().trim
+      //      while (!passCheck(pass)) {
+      //        out.println("Invalid password. Try again.")
+      //        out.print("-> ")
+      //        pass = (in.readLine().trim)
+      //      }
 
       out.print("Choose a Class:\r\n\n")
       out.print({ RESET } + { RED } +
@@ -143,5 +143,6 @@ object Main extends App {
 
   system.scheduler.schedule(0.seconds, 0.1.seconds, activityManager, ActivityManager.CheckQueue)
   system.scheduler.schedule(0.seconds, 0.1.seconds, playerManager, PlayerManager.CheckInput)
+  system.scheduler.schedule(0.seconds, 2.0.seconds, playerManager, PlayerManager.CheckStam)
   checkConnections()
 }

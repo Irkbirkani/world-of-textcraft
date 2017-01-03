@@ -187,7 +187,14 @@ abstract class Player(
   val abilitySpeed: Int
   val abilities: Map[String, Int]
   val className: String
-  val stamina: Int
+
+  var resting = false
+  val maxStamina: Int
+  var _stamina: Int
+  def stamina: Int
+  def subStam(dist: Int) = if ((stamina - dist) <= 0) _stamina = 0 else _stamina -= dist
+  def addStam(inc: Int) = if ((stamina + inc) >= maxStamina) _stamina = maxStamina else _stamina += inc
+
   val classPower: Int
   val dmgReduc: Int
 
@@ -196,8 +203,8 @@ abstract class Player(
     abilities.foreach(a => output.println(a._1 + ": available at level " + a._2))
   }
 
-  var transDest:String
-  
+  var transDest: String
+
   //Health Management
   val startHealth: Int
   def health = _health
@@ -243,6 +250,7 @@ abstract class Player(
 
   //Move Player
   private def move(direction: Int, pla: ActorRef): Unit = {
+    resting = false
     if (victim.isEmpty) {
       location ! Room.GetExit(direction, pla)
     }
@@ -425,7 +433,10 @@ abstract class Player(
     else if ("down".startsWith(in)) move(5, self)
     else if ("look".startsWith(in)) location ! Room.PrintDescription(self)
     else if (in.startsWith("getto")) Main.roomManager ! RoomManager.ShortPath(location.path.name, in.drop(6))
-    //player inventory
+    else if (in.startsWith("rest")) {
+      output.println("You are resting")
+      resting = true
+    } //player inventory
     else if (in.length > 0 && "inventory".startsWith(in)) printInventory
     else if (in.startsWith("inspect")) inspectItem(in.trim.drop(8))
     else if (in.startsWith("get")) location ! Room.GetItem(name, in.trim.drop(4), self)
@@ -446,6 +457,7 @@ abstract class Player(
         "\r\nClass: " + className +
         "\r\nLocation: " + location.path.name +
         "\r\nHealth: " + health +
+        "\r\nStamina: " + stamina +
         "\r\nLevel: " + level +
         "\r\nEXP till next level: " + (newLvlAt - exp))
     } //combat commands

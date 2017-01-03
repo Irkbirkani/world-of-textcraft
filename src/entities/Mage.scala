@@ -27,12 +27,13 @@ class Mage(
 
   def receive = {
     case SetMode(mode) => changeMode(mode)
+    case CheckStamina => checkStamina(this)
     case ProcessInput => processInput(this, self)
     case CheckPass(pass, in, out, sock) => checkPass(pass, this, self, in, out, sock)
     case EnterGame(loc) => enterGame(loc, this, self)
     case PrintMessage(msg) => output.println(msg)
     case AddToInventory(item) => addToInv(item, this)
-    case TakeExit(dir) => takeExit(dir, this, self)
+    case TakeExit(dir, dist) => takeExit(dir, this, self, dist)
     case KillCmnd(c) => killCmnd(c, this, self)
     case AttackNow(send) => attack(this, send)
     case SendDamage(loc, dmg, send) => sendDmg(loc, dmg, this, self, send)
@@ -70,20 +71,20 @@ class Mage(
     case CheckPlayers(dest) =>
       transDest = dest
       transporting match {
-        case "party" => party.filter(m=> m._1 != self && m._2 == location).foreach { m =>
+        case "party" => party.filter(m => m._1 != self && m._2 == location).foreach { m =>
           m._1 ! PrintMessage(makeFstCap(name) + " wants to transport you to " + dest + ". y/_")
           m._1 ! SetMode(2)
           m._1 ! SetTransDest(dest)
         }
-        case nme => 
-           val trns = party.filter(m => m._1.path.name == nme.toUpperCase() && m._2 == location).toList
-           if (trns.length == 0) output.println(makeFstCap(nme) + " is not in your party or in a different room.")
-           else if (nme == name) output.println("You cannot transport your self. Use Teleport.")
-           else {
-             trns(0)._1 ! PrintMessage(makeFstCap(name) + " wants to transport you to " + dest + ". y/_")
-             trns(0)._1 ! SetMode(2)
-             trns(0)._1 ! SetTransDest(dest)
-           }
+        case nme =>
+          val trns = party.filter(m => m._1.path.name == nme.toUpperCase() && m._2 == location).toList
+          if (trns.length == 0) output.println(makeFstCap(nme) + " is not in your party or in a different room.")
+          else if (nme == name) output.println("You cannot transport your self. Use Teleport.")
+          else {
+            trns(0)._1 ! PrintMessage(makeFstCap(name) + " wants to transport you to " + dest + ". y/_")
+            trns(0)._1 ! SetMode(2)
+            trns(0)._1 ! SetTransDest(dest)
+          }
       }
     case SetTransDest(dest) => transDest = dest
     case StartTeleport(rm) =>
@@ -102,7 +103,7 @@ class Mage(
     case BurnCD =>
       output.println("Burn off cooldown.")
       burnCD = false
-    case TransCD => 
+    case TransCD =>
       output.println("Transport off cooldown.")
       transCD = false
   }
@@ -141,7 +142,7 @@ class Mage(
     else {
       val Array(_, ppl, dest) = in.split(" +", 3)
       transporting = ppl
-      Main.activityManager ! ActivityManager.Enqueue(100, StartTransport(dest,self), self)
+      Main.activityManager ! ActivityManager.Enqueue(100, StartTransport(dest, self), self)
       Main.activityManager ! ActivityManager.Enqueue(1800, TransCD, self)
     }
   }
@@ -153,7 +154,9 @@ class Mage(
 
   val className = "Mage"
 
-  val stamina = 100
+  val maxStamina = 110
+  var _stamina = maxStamina
+  def stamina = _stamina
 
   val classPower = 150
 
@@ -171,7 +174,7 @@ object Mage {
   case class Teleport(rm: String)
   case object TeleCD
 
-  case class StartTransport(dest:String, self:ActorRef)
+  case class StartTransport(dest: String, self: ActorRef)
   case class CheckPlayers(dest: String)
   case object TransCD
 }

@@ -5,7 +5,7 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.actor.Props
 import akka.actor.actorRef2Scala
-import Character.{ PrintMessage, Invite, ProcessInput }
+import Character.{ PrintMessage, Invite, ProcessInput, CheckStamina }
 import java.io.PrintStream
 import java.io.BufferedReader
 import java.net.Socket
@@ -19,6 +19,7 @@ class PlayerManager extends Actor {
   def receive = {
     case CheckInput =>
       context.children.foreach(_ ! ProcessInput)
+    case CheckStam => context.children.foreach(_ ! CheckStamina)
     case NewPlayer(clas, name, pass, lvl, health, loc, inv, in, out, sock) =>
       if (context.child(name.toUpperCase()).nonEmpty) {
         out.println("Name taken.")
@@ -73,6 +74,7 @@ class PlayerManager extends Actor {
 object PlayerManager {
   //Player Management
   case object CheckInput
+  case object CheckStam
   case class NewPlayer(clas: String, name: String, pass: String, level: Int, health: Double, location: String, inventory: MutableDLList[Item], input: BufferedReader, output: PrintStream, sock: Socket)
   case class FindChild(name: String, pass: String, in: BufferedReader, out: PrintStream, sock: Socket)
 

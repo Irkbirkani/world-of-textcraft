@@ -30,7 +30,7 @@ object Character {
 
   //Inpuut case classes
   case class SetMode(mode: Int)
-  
+
   case object ProcessInput
   def processInput(pl: Player, self: ActorRef) = {
     if (pl.input.ready() && !pl.stunned) {
@@ -78,19 +78,30 @@ object Character {
   }
 
   //Exit case classes
-  case class TakeExit(dir: Option[ActorRef])
-
-  def takeExit(dir: Option[ActorRef], pl: Player, pla: ActorRef) = {
-    dir match {
-      case Some(dest) =>
-        if (pl.location != null) pl.location ! Room.LeaveRoom(pla, pl.makeFstCap(pl.name), pl.sneaking)
-        pl.newLoc(dest)
-        pl.changeLoc(pla, dest)
-        pl.location ! Room.EnterRoom(pla, pl.makeFstCap(pl.name), pl.sneaking)
-        pl.location ! Room.PrintDescription(pla)
-      case None =>
-        pl.output.println("You can't go that way")
+  case object CheckStamina
+  def checkStamina(pl:Player) = {
+    pl.resting match {
+      case false => pl.addStam(1)
+      case true => pl.addStam(5)
     }
+  }
+
+  case class TakeExit(dir: Option[ActorRef], dist: Int)
+
+  def takeExit(dir: Option[ActorRef], pl: Player, pla: ActorRef, dist: Int) = {
+    pl.subStam(dist)
+    if (pl.stamina > 0) {
+      dir match {
+        case Some(dest) =>
+          if (pl.location != null) pl.location ! Room.LeaveRoom(pla, pl.makeFstCap(pl.name), pl.sneaking)
+          pl.newLoc(dest)
+          pl.changeLoc(pla, dest)
+          pl.location ! Room.EnterRoom(pla, pl.makeFstCap(pl.name), pl.sneaking)
+          pl.location ! Room.PrintDescription(pla)
+        case None =>
+          pl.output.println("You can't go that way")
+      }
+    } else pl.output.println("Not enough Stamina!")
   }
 
   case class EnterGame(loc: ActorRef)
@@ -103,6 +114,7 @@ object Character {
   case class KillCmnd(victim: ActorRef)
 
   def killCmnd(c: ActorRef, pl: Player, pla: ActorRef) = {
+    pl.resting = false
     pl.setVictim(Some(c))
     if (pl.sneaking) {
       pla ! Rogue.Unsneak
@@ -208,7 +220,7 @@ object Character {
   }
 
   //Transport case classes
-  case class SetTransDest(dest:String)
+  case class SetTransDest(dest: String)
 
   //DOT case classes
   case class DOTCmnd(victim: ActorRef, dotType: String)

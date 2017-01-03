@@ -1,10 +1,10 @@
 <rooms>
-	<room name="FirstRoom" keyword="FirstRoom">
+	<room name="FirstRoom" keyword="FirstRoom" dist="10">
 		<description>You are in the first Room.Exits:.East--SecondRoom.=================
 		</description>
 		<exits>,,SecondRoom,,,</exits>
 	</room>
-	<room name="SecondRoom" keyword="SecondRoom">
+	<room name="SecondRoom" keyword="SecondRoom" dist="10">
 		<description>You are in the second Room.Exits:.South--FourthRoom.East--ThirdRoom.West--FirstRoom.=================================
 		</description>
 		<item name="sword" damage="5" speed="10" armor="0" food ="0" itype="hand">It Looks
@@ -15,20 +15,20 @@
 		</item>
 		<exits>,FourthRoom,ThirdRoom,FirstRoom,,</exits>
 	</room>
-	<room name="ThirdRoom" keyword="ThirdRoom">
+	<room name="ThirdRoom" keyword="ThirdRoom" dist="10">
 		<description>You are in the Third Room.Exits:.South--FifthRoom.West--SecondRoom.===========================
 		</description>
 		<npcs name="Muffin" level="100" health="1000" location="ThirdRoom" attack="50" armor="50" speed="30" desc="A cute Welsh Corgi!">
 			<item name="Sword of Power" damage="500" speed="3" armor="0" food="0" itype="twoHand" >The most powerful weapon in the game!</item></npcs>
 		<exits>,FifthRoom,,SecondRoom,,</exits>
 	</room>
-	<room name="FourthRoom" keyword="FourthRoom">
+	<room name="FourthRoom" keyword="FourthRoom" dist="10">
 		<description>You enter room number Four.Exits:.North--SecondRoom.South--SeventhRoom.West--SixthRoom.===================================
 		</description>
 		<item name="your bank balance" damage="0" speed="0" armor="0" food="0" itype="misc">you wish it were as high as your GPA.</item>
 		<exits>SecondRoom,SeventhRoom,,SixthRoom,,</exits>
 	</room>
-	<room name="FifthRoom" keyword="FifthRoom">
+	<room name="FifthRoom" keyword="FifthRoom" dist="10">
 		<description>The Fifth Room.Exits:.North--ThirdRoom.South--NinthRoom.West--SeventhRoom.===================================
 		</description>
 		<item name="sword" damage="5" speed="10" armor="0" food ="0" itype="hand">It Looks
@@ -39,12 +39,12 @@
 		</item>
 		<exits>ThirdRoom,NinthRoom,,SeventhRoom,,</exits>
 	</room>
-	<room name="SixthRoom" keyword="SixthRoom">
+	<room name="SixthRoom" keyword="SixthRoom" dist="10">
 		<description>The Sixth Room.Exit:.East--FourthRoom.=================
 		</description>
 		<exits>,,FourthRoom,,,</exits>
 	</room>
-	<room name="SeventhRoom" keyword="SeventhRoom">
+	<room name="SeventhRoom" keyword="SeventhRoom" dist="10">
 		<description>The Crossroads of the rooms.Exits:.North--FourthRoom.South--NinthRoom.East--FifthRoom.West--EightRoom.=========================================
 		</description>
 		<item name="thing" damage="15" speed="35" armor="0" food ="0" itype="twoHand">The
@@ -52,12 +52,12 @@
 		</item>
 		<exits>FourthRoom,NinthRoom,FifthRoom,EighthRoom,,</exits>
 	</room>
-	<room name="EighthRoom" keyword="EighthRoom">
+	<room name="EighthRoom" keyword="EighthRoom" dist="10">
 		<description>Room Numero Ocho.Salida:.East--SeventhRoom.==============
 		</description>
 		<exits>,,SeventhRoom,,,</exits>
 	</room>
-	<room name="NinthRoom" keyword="NinthRoom">
+	<room name="NinthRoom" keyword="NinthRoom" dist="10">
 		<description>The Second Highest room number.Exits:.North--FifthRoom.===========
 		</description>
 		<item name="hat" damage="0" speed="0" armor="5" food ="0" itype="head">its pretty rad looking.</item>
@@ -68,7 +68,7 @@
 		     <item name="bat meat" damage="0" speed="0" armor="0" food="5" itype="food" desc = "An evil little thing">Stringy and chewy, but restores 5 health.</item></npcs>
 		<exits>SeventhRoom,,,,,,</exits>
 	</room>
-	<room name="TenthRoom" keyword="TenthRoom">
+	<room name="TenthRoom" keyword="TenthRoom" dist="10">
 		<description>The last Room.Exits:.North--FifthRoom.===========
 		</description>
 		<exits>FifthRoom,,,,,</exits>

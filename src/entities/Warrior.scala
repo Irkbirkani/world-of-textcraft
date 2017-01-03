@@ -28,12 +28,13 @@ class Warrior(
 
   def receive = {
     case SetMode(mode) => changeMode(mode)
+    case CheckStamina => checkStamina(this)
     case ProcessInput => processInput(this, self)
     case CheckPass(pass, in, out, sock) => checkPass(pass, this, self, in, out, sock)
     case EnterGame(loc) => enterGame(loc, this, self)
     case PrintMessage(msg) => output.println(msg)
     case AddToInventory(item) => addToInv(item, this)
-    case TakeExit(dir) => takeExit(dir, this, self)
+    case TakeExit(dir, dist) => takeExit(dir, this, self, dist)
     case KillCmnd(c) => killCmnd(c, this, self)
     case AttackNow(send) => attack(this, send)
     case SendDamage(loc, dmg, send) => sendDmg(loc, dmg, this, self, send)
@@ -117,7 +118,9 @@ class Warrior(
 
   val className = "Warrior"
 
-  val stamina = 125
+  val maxStamina = 125
+  var _stamina = maxStamina
+  def stamina = _stamina
 
   val classPower = 100
 

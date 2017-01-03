@@ -11,6 +11,7 @@ import entities.{ Character, Item }
 class Room(
     keyword: String,
     val name: String,
+    val distance: Int,
     val description: List[String],
     private var _items: MutableDLList[Item],
     private val exits: List[String]) extends Actor {
@@ -23,7 +24,7 @@ class Room(
       sender ! PrintMessage(printDescription)
     //Exit Management
     case GetExit(dir, pla) =>
-      pla ! TakeExit(getExit(dir))
+      pla ! TakeExit(getExit(dir), distance)
     case LinkRooms(rooms) =>
       actorExits = exits.map(e => if (e.isEmpty) None else Some(rooms(e.toUpperCase)))
       sender ! RoomManager.LinkingRooms(name, exits)
@@ -157,11 +158,12 @@ object Room {
   def apply(n: xml.Node): Room = {
     val keyword = (n \ "@keyword").text
     val name = (n \ "@name").text
+    val dist = (n \ "@dist").text.toInt
     val description = (n \ "description").text.trim.split("""\.""").toList
     (n \ "npcs").map { npc => NPC(npc) }
     val item = new MutableDLList[Item]()
     (n \ "item").map { inode => Item(inode) }.toList.foreach(_ +=: item)
     val exits = (n \ "exits").text.split(",").padTo(6, "").toList
-    new Room(keyword, name, description, item, exits)
+    new Room(keyword, name, dist, description, item, exits)
   }
 }

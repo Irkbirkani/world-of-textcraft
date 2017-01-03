@@ -31,7 +31,7 @@ class NPC(val name: String,
   private var victim: Option[ActorRef] = None
 
   def receive = {
-    case TakeExit(dir) =>
+    case TakeExit(dir, dist) =>
       dir match {
         case Some(dest) =>
           if (_location != null) location ! Room.LeaveRoom(self, name, false)
