@@ -95,6 +95,10 @@ class Priest(
 
   val dmgReduc = 10
   val startHealth = 110
+  
+  val classArmor = Item.cloth
+  val classWeapons = List("")
+
 
   var transDest = ""
 

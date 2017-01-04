@@ -163,6 +163,9 @@ class Mage(
   val dmgReduc = 15
   val startHealth = 110
 
+  val classArmor = Item.cloth
+  val classWeapons = List("")
+
 }
 
 object Mage {

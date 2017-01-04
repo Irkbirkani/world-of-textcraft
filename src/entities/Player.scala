@@ -100,28 +100,34 @@ abstract class Player(
   def equip(itemName: String): Unit = {
     getFromInventory(itemName) match {
       case Some(item) =>
-        val eqItem = new EquippedItem(item.itype, item)
-        if (eqItem.bodyPart == Item.chest || eqItem.bodyPart == Item.head || eqItem.bodyPart == Item.legs
-          && equipment.count(_.bodyPart == eqItem.bodyPart) == 0) {
+        val eqItem = new EquippedItem(item.itype._1, item.itype._2, item)
+        if (eqItem.slot == Item.chest || eqItem.slot == Item.head || eqItem.slot == Item.legs
+          && eqItem.itype == classArmor
+          && equipment.count(_.slot == eqItem.slot) == 0) {
           _equipment = eqItem :: _equipment
           output.println(eqItem.item.name + " equipped.")
-        } else if (eqItem.bodyPart == Item.hand
-          && equipment.count(_.bodyPart == Item.twoHand) == 0
-          && equipment.count(_.bodyPart == eqItem.bodyPart) <= 1) {
-          _equipment = eqItem :: _equipment
-          output.println(eqItem.item.name + " equipped.")
-        } else if (eqItem.bodyPart == Item.offHand
-          && equipment.count(_.bodyPart == Item.twoHand) == 0
-          && equipment.count(_.bodyPart == eqItem.bodyPart) == 0) {
-          _equipment = eqItem :: _equipment
-          output.println(eqItem.item.name + " equipped.")
-        } else if (eqItem.bodyPart == Item.twoHand
-          && equipment.count(_.bodyPart == Item.hand) == 0
-          && equipment.count(_.bodyPart == Item.offHand) == 0
-          && equipment.count(_.bodyPart == eqItem.bodyPart) == 0) {
-          _equipment = eqItem :: _equipment
-          output.println(eqItem.item.name + " equipped.")
-        } else {
+        } else if (eqItem.slot == Item.weapon) eqItem.itype match {
+          case Item.hand =>
+            if (equipment.count(_.itype == Item.twoHand) == 0
+              && equipment.count(_.itype == eqItem.slot) <= 1) {
+              _equipment = eqItem :: _equipment
+              output.println(eqItem.item.name + " equipped.")
+            }
+          case Item.offHand =>
+            if (equipment.count(_.itype == Item.twoHand) == 0
+              && equipment.count(_.itype == eqItem.slot) == 0) {
+              _equipment = eqItem :: _equipment
+              output.println(eqItem.item.name + " equipped.")
+            }
+          case Item.twoHand =>
+            if (equipment.count(_.itype == Item.hand) == 0
+              && equipment.count(_.itype == Item.offHand) == 0
+              && equipment.count(_.itype == eqItem.slot) == 0) {
+              _equipment = eqItem :: _equipment
+              output.println(eqItem.item.name + " equipped.")
+            }
+        }
+        else {
           addToInventory(item)
           output.println("Cannot equip that.")
         }
@@ -147,7 +153,7 @@ abstract class Player(
         "\r\nDamage: " + damage +
         "\r\nSpeed: " + speed)
     } else {
-      equipment.foreach(c => output.println(c.bodyPart + ": " + c.item.name))
+      equipment.foreach(c => output.println(c.slot + ": " + c.item.name))
       output.println("Armor: " + (armor + dmgReduc) +
         "\r\nDamage: " + damage +
         "\r\nSpeed: " + speed)
@@ -161,27 +167,22 @@ abstract class Player(
   }
 
   def damage = {
-    if (equipment.isEmpty) {
-      punchDamage
-    } else {
-      var sum = 0
-      for (i <- equipment) sum += i.item.damage
-      sum
-    }
+    var sum = 0
+    for (i <- equipment) sum += i.item.damage
+    if (sum == 0) punchDamage else sum
   }
 
   def speed = {
-    if (equipment.isEmpty) {
-      punchSpeed
-    } else {
-      var sum = 0
-      for (i <- equipment) sum += i.item.speed
-      sum
-    }
+    var sum = 0
+    for (i <- equipment) sum += i.item.speed
+    if (sum == 0) punchSpeed else sum
   }
 
   //Class Management
   def classCommands(in: String): Unit
+
+  val classArmor: String
+  val classWeapons: List[String]
 
   val abilityPower: Int
   val abilitySpeed: Int
@@ -230,7 +231,7 @@ abstract class Player(
     val food = getFromInventory(item)
     food match {
       case Some(fd) =>
-        fd.itype match {
+        fd.itype._1 match {
           case Item.food =>
             if (health == startHealth) {
               output.println("Health at max")
@@ -500,6 +501,6 @@ object Player {
   val startLvl = 1
 
   val punchDamage = 3
-  val punchSpeed = 10
+  val punchSpeed = 20
 
 }
