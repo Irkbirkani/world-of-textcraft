@@ -126,10 +126,9 @@ class Warrior(
 
   val dmgReduc = 25
   val startHealth = 125
-  
-  val classArmor = Item.plate
-  val classWeapons = List("")
 
+  val classArmor = Item.plate
+  val classWeapons = List((Item.sword, 1), (Item.shield, 0), (Item.twoHSword, 0), (Item.hammer, 0))
 
   var transDest = ""
 }

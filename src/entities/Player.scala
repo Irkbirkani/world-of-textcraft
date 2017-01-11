@@ -106,18 +106,26 @@ abstract class Player(
           && equipment.count(_.slot == eqItem.slot) == 0) {
           _equipment = eqItem :: _equipment
           output.println(eqItem.item.name + " equipped.")
-        } else if (eqItem.slot == Item.weapon) eqItem.itype match {
+        } else if (eqItem.slot == Item.weapon
+          && classWeapons.filter(_._1 == eqItem.item.wepType).length == 1) eqItem.itype match {
           case Item.hand =>
+            val numWep = classWeapons.filter(_._1 == eqItem.item.wepType)
             if (equipment.count(_.itype == Item.twoHand) == 0
-              && equipment.count(_.itype == eqItem.slot) <= 1) {
+              && equipment.count(_.itype == eqItem.slot) <= numWep(0)._2) {
               _equipment = eqItem :: _equipment
               output.println(eqItem.item.name + " equipped.")
+            } else {
+              addToInventory(item)
+              output.println("Cannot equip that.")
             }
           case Item.offHand =>
             if (equipment.count(_.itype == Item.twoHand) == 0
               && equipment.count(_.itype == eqItem.slot) == 0) {
               _equipment = eqItem :: _equipment
               output.println(eqItem.item.name + " equipped.")
+            } else {
+              addToInventory(item)
+              output.println("Cannot equip that.")
             }
           case Item.twoHand =>
             if (equipment.count(_.itype == Item.hand) == 0
@@ -125,6 +133,9 @@ abstract class Player(
               && equipment.count(_.itype == eqItem.slot) == 0) {
               _equipment = eqItem :: _equipment
               output.println(eqItem.item.name + " equipped.")
+            } else {
+              addToInventory(item)
+              output.println("Cannot equip that.")
             }
         }
         else {
@@ -154,7 +165,7 @@ abstract class Player(
         "\r\nSpeed: " + speed)
     } else {
       equipment.foreach(c => output.println(c.slot + ": " + c.item.name))
-      output.println("Armor: " + (armor + dmgReduc) +
+      output.println("Armor: " + armor +
         "\r\nDamage: " + damage +
         "\r\nSpeed: " + speed)
     }
@@ -163,7 +174,7 @@ abstract class Player(
   def armor = {
     var sum = 0
     for (i <- equipment) sum += i.item.armor
-    sum
+    sum + dmgReduc
   }
 
   def damage = {
@@ -182,7 +193,8 @@ abstract class Player(
   def classCommands(in: String): Unit
 
   val classArmor: String
-  val classWeapons: List[String]
+  // String denotes wepType Int denotes how many can be equipped
+  val classWeapons: List[(String, Int)]
 
   val abilityPower: Int
   val abilitySpeed: Int

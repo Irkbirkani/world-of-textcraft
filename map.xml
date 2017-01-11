@@ -7,9 +7,11 @@
 	<room name="SecondRoom" keyword="SecondRoom" dist="10">
 		<description>You are in the second Room.Exits:.South--FourthRoom.East--ThirdRoom.West--FirstRoom.=================================
 		</description>
-		<item name="sword" damage="5" speed="10" armor="0" food ="0" itype="hand" slot="weapon">It Looks Sharp
+		<item name="sword" damage="5" speed="10" itype="hand" slot="weapon" wepType="sword">It Looks Sharp
 		</item>
-		<item name="torch" damage="0" speed="0" armor="0" food ="0" itype="misc" slot = "misc">It's not that bright
+		<item name="wand" damage="5" speed="10" itype="hand" slot="weapon" wepType="wand">Looks dangerous</item>
+		<item name="wand" damage="5" speed="10" itype="hand" slot="weapon" wepType="wand">Looks dangerous</item>
+		<item name="torch" slot = "misc" itype="misc">It's not that bright
 		</item>
 		<exits>,FourthRoom,ThirdRoom,FirstRoom,,</exits>
 	</room>
@@ -17,37 +19,39 @@
 		<description>You are in the Third Room.Exits:.South--FifthRoom.West--SecondRoom.===========================
 		</description>
 		<npcs name="Muffin" level="100" health="1000" location="ThirdRoom" attack="50" armor="50" speed="30" desc="A cute Welsh Corgi!">
-			<item name="Sword of Power" damage="500" speed="3" armor="0" food="0" itype="twoHand" slot="weapon" >The most powerful weapon in the game!</item></npcs>
+			<item name="Sword of Power" damage="500" speed="3" itype="twoHand" slot="weapon" wepType="2Hsword">The most powerful weapon in the game!</item></npcs>
 		<exits>,FifthRoom,,SecondRoom,,</exits>
 	</room>
 	<room name="FourthRoom" keyword="FourthRoom" dist="10">
 		<description>You enter room number Four.Exits:.North--SecondRoom.South--SeventhRoom.West--SixthRoom.===================================
 		</description>
-		<item name="your bank balance" damage="0" speed="0" armor="0" food="0" itype="misc" slot="misc">you wish it were as high as your GPA.</item>
+		<item name="dagger" damage="4" speed="7" itype="hand" slot="weapon" wepType="dagger">small but sharp</item>
+		<item name="your bank balance" slot="misc">you wish it were as high as your GPA.</item>
 		<exits>SecondRoom,SeventhRoom,,SixthRoom,,</exits>
 	</room>
 	<room name="FifthRoom" keyword="FifthRoom" dist="10">
 		<description>The Fifth Room.Exits:.North--ThirdRoom.South--NinthRoom.West--SeventhRoom.===================================
 		</description>
-		<item name="sword" damage="5" speed="10" armor="0" food ="0" itype="hand" slot="weapon">It Looks Sharp
+		<item name="sword" damage="5" speed="10" itype="hand" slot="weapon" wepType="sword">It Looks Sharp
 		</item>
-		<item name="shield" damage="0" speed="0" armor="10" food ="0" itype="offHand" slot="weapon">It's slightly broken
+		<item name="shield" armor="10" itype="offHand" slot="weapon" wepType="shield">It's slightly broken
 		</item>
 		<exits>ThirdRoom,NinthRoom,,SeventhRoom,,</exits>
 	</room>
 	<room name="SixthRoom" keyword="SixthRoom" dist="10">
 		<description>The Sixth Room.Exit:.East--FourthRoom.=================
 		</description>
-		<item name="platelegs" damage="0" speed="0" armor="10" food="0" itype="plate" slot="leg">SomeGood plate legs</item>
-		<item name="robe" damage="0" speed="0" armor="3" food="0" itype="cloth" slot="chest"> A plain black robe</item>
+		<item name="platelegs" armor="10" itype="plate" slot="leg">SomeGood plate legs</item>
+		<item name="robe" armor="3" itype="cloth" slot="chest"> A plain black robe</item>
 		<exits>,,FourthRoom,,,</exits>
 	</room>
 	<room name="SeventhRoom" keyword="SeventhRoom" dist="10">
 		<description>The Crossroads of the rooms.Exits:.North--FourthRoom.South--NinthRoom.East--FifthRoom.West--EightRoom.=========================================
 		</description>
-		<item name="thing" damage="15" speed="35" armor="0" food ="0" itype="twoHand" slot="weapon">The
+		<item name="thing" damage="15" speed="35" itype="twoHand" slot="weapon" wepType="2Hsword">The
 			most amazing thing you ever did see
 		</item>
+		<item name="staff" damage="15" speed="35" itype="twoHand" slot="weapon" wepType="staff"></item>
 		<exits>FourthRoom,NinthRoom,FifthRoom,EighthRoom,,</exits>
 	</room>
 	<room name="EighthRoom" keyword="EighthRoom" dist="10">
@@ -58,12 +62,12 @@
 	<room name="NinthRoom" keyword="NinthRoom" dist="10">
 		<description>The Second Highest room number.Exits:.North--FifthRoom.===========
 		</description>
-		<item name="hat" damage="0" speed="0" armor="3" food ="0" itype="leather" slot = "head">its pretty rad looking.</item>
-		<item name="ball" damage="2" speed="1" armor="0" food ="0" itype="offHand" slot="weapon">it might be a soccer ball?</item>
-		<item name="apple" damage="0" speed="0" armor="0" food="5" itype="food" slot="food">A delicious looking apple. Restores 5 health.</item>
-		<item name="apple" damage="0" speed="0" armor="0" food="5" itype="food" slot="food">A delicious looking apple. Restores 5 health.</item>
+		<item name="hat" armor="3" itype="leather" slot = "head">its pretty rad looking.</item>
+		<item name="book" damage="2" speed="0" itype="offHand" slot="weapon" wepType="book">A book of Power!</item>
+		<item name="apple" food="5" itype="food" slot="food">A delicious looking apple. Restores 5 health.</item>
+		<item name="apple" food="5" itype="food" slot="food">A delicious looking apple. Restores 5 health.</item>
 		<npcs name="bat" level="1" health="25" location="NinthRoom" attack="2" armor="1" speed="10" >an evil little thing
-		     <item name="bat meat" damage="0" speed="0" armor="0" food="5" itype="food" slot="food">Stringy and chewy, but restores 5 health.</item></npcs>
+		     <item name="bat meat" food="5" itype="food" slot="food">Stringy and chewy, but restores 5 health.</item></npcs>
 		<exits>SeventhRoom,,,,,,</exits>
 	</room>
 	<room name="TenthRoom" keyword="TenthRoom" dist="10">

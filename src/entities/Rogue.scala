@@ -127,10 +127,9 @@ class Rogue(
 
   val dmgReduc = 20
   val startHealth = 115
-  
-  val classArmor = Item.leather
-  val classWeapons = List("")
 
+  val classArmor = Item.leather
+  val classWeapons = List((Item.dagger, 1), (Item.sword, 1))
 
   var transDest = ""
 

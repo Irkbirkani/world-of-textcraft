@@ -164,7 +164,7 @@ class Mage(
   val startHealth = 110
 
   val classArmor = Item.cloth
-  val classWeapons = List("")
+  val classWeapons = List((Item.wand, 0), (Item.book, 0), (Item.staff, 0))
 
 }
 
